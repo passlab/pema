@@ -1,5 +1,7 @@
 package xxx.peviewer.hwloc3d.demo;
 
+import java.awt.*;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +29,11 @@ import com.jogamp.opengl.awt.GLCanvas;
  * @author martin
  */
 public class SurfaceDemoAWT extends AWTAbstractAnalysis {
+  private Frame mainFrame;
+  
+  SurfaceDemoAWT() {
+	  prepareGUI();
+  }
   public static void main(String[] args) throws Exception {
     SurfaceDemoAWT d = new SurfaceDemoAWT();
     AnalysisLauncher.open(d);
@@ -76,5 +83,56 @@ public class SurfaceDemoAWT extends AWTAbstractAnalysis {
 
     chart = f.newChart(Quality.Advanced().setHiDPIEnabled(true));
     chart.getScene().getGraph().add(surface);
+    mainFrame.add(chart);
   }
+  
+  private void prepareGUI(){
+	      mainFrame = new Frame("HWLOC3D Visualization");
+	      mainFrame.setSize(400,400);
+	      mainFrame.setLayout(new GridLayout(3, 1));
+	      mainFrame.addWindowListener(new WindowAdapter() {
+	         public void windowClosing(WindowEvent windowEvent){
+	            System.exit(0);
+	         }        
+	      });    
+	   	Label statusLabel;
+	      statusLabel = new Label();        
+	      statusLabel.setAlignment(Label.CENTER);
+	      statusLabel.setSize(350,100);
+
+	      mainFrame.add(statusLabel);
+	      
+	      //add Menu 
+	      MenuBar menuBar = new MenuBar(); 
+	      mainFrame.setMenuBar(menuBar); 
+	  
+	      // Create a "File" menu 
+	      Menu fileMenu = new Menu("File"); 
+	      MenuItem openItem = new MenuItem("Open"); 
+	      openItem.addActionListener(new ActionListener() { 
+	          public void actionPerformed(ActionEvent e) { 
+			      final FileDialog fileDialog = new FileDialog(mainFrame,"Select file");
+	              fileDialog.setVisible(true);
+	              statusLabel.setText("File Selected :" 
+	            + fileDialog.getDirectory() + fileDialog.getFile());
+	          } 
+	      }); 
+	      fileMenu.add(openItem); 
+	      fileMenu.addSeparator(); 
+	  
+	      // Create an "Exit" menu item with an action listener 
+	      MenuItem exitItem = new MenuItem("Exit"); 
+	      exitItem.addActionListener(new ActionListener() { 
+	          public void actionPerformed(ActionEvent e) { 
+	              System.exit(0); 
+	          } 
+	      }); 
+	        
+	      //Added exit as item in MenuItem 
+	      fileMenu.add(exitItem); 
+	  
+	      menuBar.add(fileMenu); 
+	      
+	      mainFrame.setVisible(true);  
+	   }
 }
