@@ -1,4 +1,4 @@
-package xxx.peviewer.hwloc3d;
+package xxx.peviewer.hwloc3d.demo;
 
 import org.jzy3d.analysis.AWTAbstractAnalysis;
 import org.jzy3d.analysis.AnalysisLauncher;
