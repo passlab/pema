@@ -3,6 +3,7 @@
 	<name>hwloc3d</name>
 	<comment></comment>
 	<projects>
+	<project>peviewer</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
