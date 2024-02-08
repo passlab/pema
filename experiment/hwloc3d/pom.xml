@@ -10,7 +10,11 @@
 
 	<!--To retrieve Jzy3d dependencies -->
 	<repositories>
-
+		<repository>
+            <id>Maven2-central</id>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+        
 		<repository>
 			<id>jzy3d-snapshots</id>
 			<name>Jzy3d Snapshots</name>
@@ -22,15 +26,7 @@
 			<name>Jzy3d Releases</name>
 			<url>https://maven.jzy3d.org/releases/</url>
 		</repository>
-
 	</repositories>
-
-	<!-- <repositories> <repository> <id>Sonatype-snapshots</id> <name>Sonatyp
-		Snapshots</name> <url>https://oss.sonatype.org/content/groups/public</url>
-		</repository> <repository> <id>Sonatype-releases-staging</id> <name>Sonatype
-		Releases Staging</name> <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-		</repository> </repositories> -->
-
 
 	<!--To deploy tutorials: 1) this project does not references master to be
 		able to be build alone 2) master still reference this project to build it
@@ -48,29 +44,49 @@
 		</snapshotRepository>
 	</distributionManagement>
 
-	<!-- <distributionManagement> <snapshotRepository> <id>ossrh</id> <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository> <repository> <id>ossrh</id> <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository> </distributionManagement> -->
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version.java>1.8</version.java>
 		<version.jzy3d>2.2.0</version.jzy3d>
+		<version.jaxb>2.3.1</version.jaxb>
+		<version.activation>1.0.2</version.activation>
 	</properties>
 
 	<dependencies>
 
+		<!-- JAXB API -->
+        <dependency>
+        	<groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>${version.jaxb}</version>
+        </dependency>
+
+        <!-- JAXB Runtime -->
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>${version.jaxb}</version>
+        </dependency>
+
+   		<dependency>
+       		<groupId>javax.xml.bind</groupId>
+       		<artifactId>activation</artifactId>
+       		<version>${version.activation}</version>
+   		</dependency>
+   		
 		<dependency>
 			<groupId>org.jzy3d</groupId>
 			<artifactId>jzy3d-native-jogl-awt</artifactId>
 			<version>${version.jzy3d}</version>
 		</dependency>
 
+		<!-- SWT support is shaky 
 		<dependency> 
 			<groupId>org.jzy3d</groupId>
 			<artifactId>jzy3d-native-jogl-swt</artifactId>
 			<version>${version.jzy3d}</version>
-		</dependency>
+		</dependency>    
+		-->
 
 		<dependency>
 			<groupId>org.jzy3d</groupId>
@@ -106,7 +122,6 @@
 
 	<build>
 		<plugins>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -140,7 +155,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
 	</build>
 

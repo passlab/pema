@@ -1,5 +1,8 @@
 package xxx.peviewer.hwloc3d.demo;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jzy3d.analysis.AWTAbstractAnalysis;
 import org.jzy3d.analysis.AnalysisLauncher;
 import org.jzy3d.chart.factories.AWTChartFactory;
@@ -7,12 +10,15 @@ import org.jzy3d.chart.factories.IChartFactory;
 import org.jzy3d.colors.Color;
 import org.jzy3d.colors.ColorMapper;
 import org.jzy3d.colors.colormaps.ColorMapRainbow;
+import org.jzy3d.maths.Coord3d;
 import org.jzy3d.maths.Range;
 import org.jzy3d.plot3d.builder.Func3D;
 import org.jzy3d.plot3d.builder.SurfaceBuilder;
 import org.jzy3d.plot3d.builder.concrete.OrthonormalGrid;
 import org.jzy3d.plot3d.primitives.Shape;
+import org.jzy3d.plot3d.primitives.Polygon;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
+import org.jzy3d.plot3d.primitives.Point;
 import com.jogamp.opengl.awt.GLCanvas;
 
 /**
@@ -29,18 +35,39 @@ public class SurfaceDemoAWT extends AWTAbstractAnalysis {
   @Override
   public void init() {
     // Define a function to plot
-    Func3D func = new Func3D((x, y) -> x * Math.sin(x * y));
+    Func3D func = new Func3D((x, y) -> x * Math.cos(x * y));
     Range range = new Range(-3, 3);
     int steps = 80;
 
     // Create the object to represent the function over the given range.
-    final Shape surface =
-        new SurfaceBuilder().orthonormal(new OrthonormalGrid(range, steps), func);
-    surface
-        .setColorMapper(new ColorMapper(new ColorMapRainbow(), surface, new Color(1, 1, 1, .5f)));
+    //final Shape surface =new SurfaceBuilder().orthonormal(new OrthonormalGrid(range, steps), func);
+    
+    //List<Polygon> polygons = new ArrayList<Polygon>();
+    //Polygon p = new Polygon(new Point(new Coord3d(10, 20, 30)));
+    //polygons.add(p);
+    
+    //final Shape surface = new Shape(polygons);
+    
+    double [][]distDataProp = new double[][] {{.25,.45, .20},{.56, .89, .45}, {.6, .3,.7}};
+    List<Polygon> polygons = new ArrayList<Polygon>();
+    for(int i = 0; i < distDataProp.length -1; i++){
+        for(int j = 0; j < distDataProp[i].length -1; j++){
+            Polygon polygon = new Polygon();
+            polygon.add(new Point( new Coord3d(i, j, distDataProp[i][j]) ));
+            polygon.add(new Point( new Coord3d(i, j+1, distDataProp[i][j+1]) ));
+            polygon.add(new Point( new Coord3d(i+1, j+1, distDataProp[i+1][j+1]) ));
+            polygon.add(new Point( new Coord3d(i+1, j, distDataProp[i+1][j]) ));
+            polygons.add(polygon);
+        }
+    }
+
+    // Creates the 3d object
+    Shape surface = new Shape(polygons);
+    
+    surface.setColorMapper(new ColorMapper(new ColorMapRainbow(), surface, new Color(1, 1, 1, .5f)));
     surface.setFaceDisplayed(true);
     surface.setWireframeDisplayed(true);
-    surface.setWireframeColor(Color.BLACK);
+    surface.setWireframeColor(Color.GREEN);
 
     // Create a chart
     //GLCapabilities c = new GLCapabilities(GLProfile.get(GLProfile.GL3));
