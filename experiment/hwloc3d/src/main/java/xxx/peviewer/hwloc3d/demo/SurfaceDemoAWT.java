@@ -2,10 +2,19 @@ package xxx.peviewer.hwloc3d.demo;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.jzy3d.chart.Chart;
+import org.jzy3d.chart.ChartLauncher;
+import org.jzy3d.chart.Settings;
 import org.jzy3d.chart.factories.AWTChartFactory;
 import org.jzy3d.chart.factories.IChartFactory;
 import org.jzy3d.colors.Color;
@@ -24,25 +33,23 @@ import com.jogamp.opengl.awt.GLCanvas;
  * @author martin
  */
 public class SurfaceDemoAWT { 
-    static String folder;
-    static String file;
+    static File hwloc2XMLFile;
+    static JFrame mainFrame;
+    static JPanel panel;
+    static Chart chart = null;
     
   public static void main(String[] args) throws Exception {
     SurfaceDemoAWT d = new SurfaceDemoAWT();
-    
-    Frame mainFrame;
-    Panel panel;
-    Chart chart;
-    
-
-	mainFrame = prepareFrameWithMenu();
-	panel = new Panel(new BorderLayout()); // Use BorderLayout for better handling
-
-	chart = drawChart();  
-	panel.add((GLCanvas) chart.getCanvas(), BorderLayout.CENTER); // Ensure the canvas fills the panel
+	
+    mainFrame = prepareFrameWithMenu();
+	panel = new JPanel(new BorderLayout()); // Use BorderLayout for better handling
 	mainFrame.add(panel);
-	//mainFrame.pack();
+	panel.setSize(400,400);
 	mainFrame.setVisible(true);  
+
+	//Not able to add canvas to a panel
+	//panel.add((GLCanvas) chart.getCanvas(), BorderLayout.CENTER); 
+	//mainFrame.pack();
   }
 
   private static Chart drawChart() {
@@ -74,40 +81,73 @@ public class SurfaceDemoAWT {
 
     Chart chart = f.newChart(Quality.Advanced().setHiDPIEnabled(true));
     chart.getScene().getGraph().add(surface);
+    ChartLauncher.openChart(chart, "HWLOC3D Chart");
+    
+    Settings.getInstance().setHardwareAccelerated(true);
     return chart;
   }
   
-  private static Frame prepareFrameWithMenu(){
-	      Frame frame = new Frame("HWLOC3D Visualization");
-	      frame.setSize(300,300);
-	      frame.setLayout(new GridLayout(3, 1));
+  private static JFrame prepareFrameWithMenu(){
+	      JFrame frame = new JFrame("HWLOC3D Frame");
+	      frame.setSize(500,500);
+	      frame.setLayout(new BorderLayout());
 	      frame.addWindowListener(new WindowAdapter() {
 	         public void windowClosing(WindowEvent windowEvent){
 	            System.exit(0);
 	         }        
 	      });    
 	      //add Menu 
-	      MenuBar menuBar = new MenuBar(); 
-	      frame.setMenuBar(menuBar); 
+	      JMenuBar menuBar = new JMenuBar(); 
+	      frame.setJMenuBar(menuBar); 
 	  
 	      // Create a "File" menu 
-	      Menu fileMenu = new Menu("File"); 
-	      MenuItem openItem = new MenuItem("Open"); 
+	      JMenu fileMenu = new JMenu("File"); 
+	      JMenuItem openItem = new JMenuItem("Open"); 
 	      openItem.addActionListener(new ActionListener() { 
-	          public void actionPerformed(ActionEvent e) { 
-			      final FileDialog fileDialog = new FileDialog(frame,"Select file");
-	              fileDialog.setVisible(true);
-	              folder = fileDialog.getDirectory();
-	              file = fileDialog.getFile();
+	          public void actionPerformed(ActionEvent ae) { 
+	              JFileChooser chooser = new JFileChooser();
+	              FileNameExtensionFilter filter = new FileNameExtensionFilter("*.xml", "xml");
+	              chooser.setFileFilter(filter);
+	              int returnVal = chooser.showOpenDialog(null);
+	              if(returnVal == JFileChooser.APPROVE_OPTION) {
+	            	  hwloc2XMLFile = chooser.getSelectedFile();
+	                  try{
+	                      FileReader reader = new FileReader(hwloc2XMLFile);
+	                      BufferedReader br = new BufferedReader(reader);
+	                      JTextArea textArea = new JTextArea();
+	                      textArea.read(br,null);
+	                      br.close();
+	                      panel.add(new JScrollPane(textArea));
+	                      textArea.requestFocus();
+	                      mainFrame.setVisible(true);
+	                      chart = drawChart();
+	                  } catch (Exception e){
+	                	  e.printStackTrace();
+	                  }
+	              }
 	          } 
 	      }); 
-	      fileMenu.add(openItem); 
+	      fileMenu.add(openItem);
+	      
+	      JMenuItem closeItem = new JMenuItem("Close"); 
+	      closeItem.addActionListener(new ActionListener() { 
+	          public void actionPerformed(ActionEvent ae) { 
+	        	  if (chart != null) {
+	        		  chart.dispose();
+	        		
+	        		  
+	        	  }
+	          } 
+	      }); 
+	      fileMenu.add(closeItem);
 	      fileMenu.addSeparator(); 
 	  
 	      // Create an "Exit" menu item with an action listener 
-	      MenuItem exitItem = new MenuItem("Exit"); 
+	      JMenuItem exitItem = new JMenuItem("Exit"); 
 	      exitItem.addActionListener(new ActionListener() { 
-	          public void actionPerformed(ActionEvent e) { 
+	          public void actionPerformed(ActionEvent ee) {
+	        	  mainFrame.dispose();
+	        	  if (chart != null) chart.dispose();
 	              System.exit(0); 
 	          } 
 	      }); 
