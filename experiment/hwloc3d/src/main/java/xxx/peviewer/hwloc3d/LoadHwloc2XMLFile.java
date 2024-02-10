@@ -10,6 +10,7 @@ import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
 public class LoadHwloc2XMLFile {
 	public static void loadHwloc2XMLFile(File hwloc2XMLFile) {
 		try {
+			System.setProperty("javax.xml.accessExternalDTD", "all");
 			// creating the JAXB context
 			JAXBContext jContext = JAXBContext.newInstance(Topology.class);
 			// creating the unmarshall object
