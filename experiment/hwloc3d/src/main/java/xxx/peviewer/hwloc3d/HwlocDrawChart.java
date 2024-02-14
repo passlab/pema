@@ -16,7 +16,11 @@ import org.jzy3d.plot3d.primitives.Polygon;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
 
+import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
+
 public class HwlocDrawChart {
+	Topology topTop = LoadHwloc2XMLFile.topTop;
+	
 	static Chart drawChart() {
 		double[][] distDataProp = new double[][] { { .25, .45, .20 }, { .56, .89, .45 }, { .6, .3, .7 } };
 		List<Polygon> polygons = new ArrayList<Polygon>();
