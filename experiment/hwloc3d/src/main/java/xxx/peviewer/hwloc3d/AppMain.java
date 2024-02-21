@@ -22,6 +22,15 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.jzy3d.chart.Chart;
 
 /**
+ * The main frame/panel for opening an hwloc XML file. Right now, it can only open one file and draw a chart for it,
+ * and the frame/panel for viewing the file and for displaying the chart are separated (separated view). 
+ * There are two enhancement we can do: 
+ * 1) Allowing to have two tabs in the frame, one for viewing the file, 
+ *    and one for drawing the chart (combined view). But I have figured out how to include a JZY3D/JOGL chart inside a Swing/AWT/SWT 
+ *    component and still have all the interactive capability. 
+ * 2) Allowing to opening multiple files, which could be in either separated view or combined view.
+ * 
+ * Bug to fix: the closing file and dispose JZY3D chart do not work. 
  */
 public class AppMain {
 	static File hwloc2XMLFile;
@@ -67,8 +76,8 @@ public class AppMain {
 				int returnVal = chooser.showOpenDialog(null);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					hwloc2XMLFile = chooser.getSelectedFile();
-					LoadHwloc2XMLFile.loadHwloc2XMLFile(hwloc2XMLFile);
 					try {
+						//Open the XML file in the text area
 						FileReader reader = new FileReader(hwloc2XMLFile);
 						BufferedReader br = new BufferedReader(reader);
 						JTextArea textArea = new JTextArea();
@@ -77,6 +86,9 @@ public class AppMain {
 						panel.add(new JScrollPane(textArea));
 						textArea.requestFocus();
 						mainFrame.setVisible(true);
+						
+						//Unmarshalling the XML files to JAXB-binding objects so we can draw chart
+						LoadHwloc2XMLFile.loadHwloc2XMLFile(hwloc2XMLFile);
 						chart = HwlocDrawChart.drawChart();
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -89,6 +101,9 @@ public class AppMain {
 		JMenuItem closeItem = new JMenuItem("Close");
 		closeItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
+				//TODO: This does not work yet. To make it work, we need to
+				//      1) close the textArea for the file and remove it from the panel 
+				//		2) Dispose the chart created for it, destroy the frame/panel created for the chart. 
 				if (chart != null) {
 					chart.dispose();
 				}
