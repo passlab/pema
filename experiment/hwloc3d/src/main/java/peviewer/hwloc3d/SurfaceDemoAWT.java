@@ -47,7 +47,8 @@ public class SurfaceDemoAWT extends AWTAbstractAnalysis {
     //IPainterFactory p = new AWTPainterFactory(c);
     IChartFactory f = new AWTChartFactory();
 
-    chart = f.newChart(Quality.Advanced().setHiDPIEnabled(true));
+    //advanced causes chart to buffer blank for a few secs
+    chart = f.newChart(Quality.Fastest().setHiDPIEnabled(true));
     chart.getScene().getGraph().add(surface);
   }
 }
