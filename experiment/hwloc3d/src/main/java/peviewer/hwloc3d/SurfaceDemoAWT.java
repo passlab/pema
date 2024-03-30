@@ -1,4 +1,4 @@
-package xxx.peviewer.hwloc3d.demo;
+package peviewer.hwloc3d;
 
 import org.jzy3d.analysis.AWTAbstractAnalysis;
 import org.jzy3d.analysis.AnalysisLauncher;
@@ -13,12 +13,7 @@ import org.jzy3d.plot3d.builder.SurfaceBuilder;
 import org.jzy3d.plot3d.builder.concrete.OrthonormalGrid;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
-import org.jzy3d.plot3d.rendering.view.ViewportConfiguration;
-import org.jzy3d.plot3d.rendering.view.modes.CameraMode;
-
 import com.jogamp.opengl.awt.GLCanvas;
-
-import org.jzy3d.plot3d.rendering.view.ViewportConfiguration;
 
 /**
  * Demo an AWT chart using JOGL {@link GLCanvas}.
