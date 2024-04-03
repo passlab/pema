@@ -41,8 +41,8 @@ public class HwlocDrawChart {
 		ITextRenderer r = new JOGLTextRenderer3d();
 		
 		//must be big enough for text padding but small enough for legible text
-		double l = 15;
-		double w = 15;
+		double l = 7;
+		double w = 7;
 		double h = 0;
 		
 		//11x7 for haswell
@@ -55,7 +55,14 @@ public class HwlocDrawChart {
 		for (int o = 0; o<tt.size();o++) {
 	    	recursiveDraw(tt.get(o), new Coord3d(0,0,0), new Coord3d(l,w,h), chart, r);
 	    }
-	
+	    
+	    
+	/*
+		Shape tempShape = draw(0,0,0,1,1,0);
+	    addColor(tempShape, Color.YELLOW);
+	    chart.getScene().getGraph().add(tempShape);
+	*/
+	    
 		ChartLauncher.openChart(chart, "HWLOC3D Chart");
 		return chart;
 	}
@@ -177,9 +184,6 @@ public class HwlocDrawChart {
 		List<Object> children = o.getObject();	
 		int num_children = children.size();
 		
-		
-		
-		
 		//If xml contains a bridge, deincrement num_children so no space is allocated for it
 		//bridge will be draw separately
 		for (int y =0; y<num_children; y++) {
@@ -191,8 +195,6 @@ public class HwlocDrawChart {
 				//draw bridge parts on bottom
 				//scope is in very top loop so origin and dim are the og ones
 				//recursiveBridgeDraw(children.get(y), new Coord3d(origin.x, origin.y-.5, origin.z), chart, r);
-				
-				
 				//draw machine last to encapsulate everything?
 			}
 		}
@@ -206,7 +208,7 @@ public class HwlocDrawChart {
 			
 			 int L2count = num_children;
 		//fewer l2s
-			if (o.getType().equals("L3Cache")) {
+			if (o.getType().equals("L3Cache") || o.getType().equals("L2Cache")) {
 				num_children =3;
 			}
 					
@@ -219,7 +221,7 @@ public class HwlocDrawChart {
 				for (int m = 0; m < num_children; m++) {
 					//fewer L2s
 					
-					if (o.getObject().get(m).getType().equals("L2Cache") && m ==1) {
+					if ( (o.getObject().get(m).getType().equals("L2Cache") || o.getObject().get(m).getType().equals("L1Cache"))&& m ==1) {
 						double boxwidth = (dim.x-origin.x)/7;
 						Coord3d square = new Coord3d(origin.x+boxwidth, dim.y-.3, origin.z);
 						spawn(square, square.add(new Coord3d(boxwidth, boxwidth, 0)), color, chart, r, null);
@@ -246,16 +248,12 @@ public class HwlocDrawChart {
 				
 			//partition horizontally
 		} else {
-			
-			
-			
 			double pad = (double) (dim.y*.05)/(num_children+1);
 			
 			double width = (double) (dim.y*.95/num_children);
 			
 			//if other child is bridge, deincrement children, no need to allocate space
 			//but then top layer doesn't run?
-			
 			
 			origin = origin.add(new Coord3d(0.15,pad,0.15));
 			
@@ -269,8 +267,6 @@ public class HwlocDrawChart {
 		}
 		}
 		
-	
-
 	
 	public static String findcpumodel(Object o) {
 		String name = "";
@@ -314,6 +310,8 @@ public class HwlocDrawChart {
 			List<Polygon> temp = new ArrayList<Polygon>();
 		    boxGen(temp, spawn, spawn2);
 		    
+		    
+		    //Shape tempShape = draw(spawn.x, spawn.y, spawn.z, spawn2.x, spawn2.y, spawn.z);
 		    Shape tempShape = new Shape(temp);
 		    addColor(tempShape, color);
 		    chart.getScene().getGraph().add(tempShape);
@@ -322,8 +320,6 @@ public class HwlocDrawChart {
 				DrawableTextWrapper txt = new DrawableTextWrapper(s, new Coord3d(spawn.x,spawn2.y-.2,spawn.z), Color.BLACK, r);
 				chart.getScene().getGraph().add(txt);
 			}
-			
-			
 		}
 		
 	//helper method to create cubes and 3d rectangles
@@ -340,6 +336,8 @@ public class HwlocDrawChart {
 		    Coord3d y = new Coord3d(spawn.x, spawn2.y, spawn.z);
 		    Coord3d z = new Coord3d(0,0,spawn2.z);
 
+		    
+		    //only uses xy of spawn and spawn2
 		    //bottom
 			addFace(faceslist, o, x, new Coord3d(spawn2.x, spawn2.y, spawn.z), y);
 			//using push face makes the text separate for some reason
@@ -384,11 +382,13 @@ public class HwlocDrawChart {
 		//that's why going all around doesn't work
 		
 		//master function for drawing cubes
-		static Shape list(double x, double y , double z, double width, double length, double height){
+		static Shape draw(double x, double y , double z, double width, double length, double height){
 			//from bottom left to upper right corner
 	        List<Polygon> polygons = new ArrayList<Polygon>();
 	        Polygon polygon = new Polygon();
 
+	        
+	        //don't need the bottom
 	        
 	        //下面
 	        polygon.add(new Point(new Coord3d(x, y, z)));
@@ -398,6 +398,7 @@ public class HwlocDrawChart {
 	        //polygon.add(new Point(new Coord3d(x, y, z)));
 	        polygons.add(polygon);
 	        
+	        /*
 	        //左边
 	        Polygon polygon2 = new Polygon();
 	        polygon2.add(new Point(new Coord3d(x, y, z+height)));
@@ -426,6 +427,27 @@ public class HwlocDrawChart {
 	        polygons.add(polygon4);
 
 	        
+	        
+	      //前面
+	        Polygon polygon5 = new Polygon();
+	        polygon5.add(new Point(new Coord3d(x,y,z)));
+	        polygon5.add(new Point(new Coord3d(x+width, y,z)));
+	        polygon5.add(new Point(new Coord3d(x+width, y, z+height)));
+	        polygon5.add(new Point(new Coord3d(x, y, z+height)));
+	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
+	        polygons.add(polygon5);
+	        
+	        
+	        //右边
+	        Polygon polygon6 = new Polygon();
+	        polygon6.add(new Point(new Coord3d(x+width, y, z)));
+	        polygon6.add(new Point(new Coord3d(x+width, y, z+height)));
+	        polygon6.add(new Point(new Coord3d(x+width, y+length, z+height)));
+	        polygon6.add(new Point(new Coord3d(x+width, y+length, z)));
+	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
+	        polygons.add(polygon6);
+	        
+	        */
 	        Shape tempShape = new Shape(polygons);
 	        
 	        return tempShape;
