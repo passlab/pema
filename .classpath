@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="experiment/hwloc3d/src/main/java"/>
+	<classpathentry kind="src" path="experiment/hwloc3d/src/test/java"/>
+	<classpathentry kind="src" path="experiment/tracecompass/JavaFX3DView/src"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
