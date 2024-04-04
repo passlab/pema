@@ -215,8 +215,10 @@ public class HwlocDrawChart {
 			double pad = (double) (dim.x*.05)/(num_children+1);
 			double width = (double) (dim.x*.95/num_children);
 			//top padding
+			
+			//only origin z gets incremented
 			origin = origin.add(new Coord3d(pad, 0.15,0.15));
-			dim = new Coord3d(width, dim.y-.1, .15);
+			dim = new Coord3d(width, dim.y-.1, 0);
 				
 				for (int m = 0; m < num_children; m++) {
 					//fewer L2s
@@ -234,6 +236,7 @@ public class HwlocDrawChart {
 						chart.getScene().getGraph().add(txt);
 						
 						//move onto next l2
+						//do not change z
 						origin = origin.add(new Coord3d(width,0,0));
 						dim = dim.add(new Coord3d(width,0,0));
 						
@@ -257,7 +260,7 @@ public class HwlocDrawChart {
 			
 			origin = origin.add(new Coord3d(0.15,pad,0.15));
 			
-				dim = new Coord3d(dim.x-.1,width, .15);
+				dim = new Coord3d(dim.x-.1,width, 0);
 				
 				for (int a = 0; a < num_children; a++) {
 					recursiveDraw(children.get(a),  origin,  dim, chart, r);
@@ -311,11 +314,17 @@ public class HwlocDrawChart {
 		    boxGen(temp, spawn, spawn2);
 		    
 		    
+		    
 		    //Shape tempShape = draw(spawn.x, spawn.y, spawn.z, spawn2.x, spawn2.y, spawn.z);
 		    Shape tempShape = new Shape(temp);
 		    addColor(tempShape, color);
 		    chart.getScene().getGraph().add(tempShape);
-			
+		    
+		    /*
+		    Shape sides = draw(spawn.x, spawn.y, spawn.z-.3, spawn2.x, spawn2.y, spawn.z-.15);
+		    addColor(sides, color);
+		    chart.getScene().getGraph().add(sides);
+			*/
 			if (s != null) {
 				DrawableTextWrapper txt = new DrawableTextWrapper(s, new Coord3d(spawn.x,spawn2.y-.2,spawn.z), Color.BLACK, r);
 				chart.getScene().getGraph().add(txt);
@@ -389,7 +398,9 @@ public class HwlocDrawChart {
 
 	        
 	        //don't need the bottom
+	        //draw sides offset with height being neg .15
 	        
+	        /*
 	        //下面
 	        polygon.add(new Point(new Coord3d(x, y, z)));
 	        polygon.add(new Point(new Coord3d(x, y+length, z)));
@@ -397,8 +408,8 @@ public class HwlocDrawChart {
 	        polygon.add(new Point(new Coord3d(x+width, y, z)));
 	        //polygon.add(new Point(new Coord3d(x, y, z)));
 	        polygons.add(polygon);
+	        */
 	        
-	        /*
 	        //左边
 	        Polygon polygon2 = new Polygon();
 	        polygon2.add(new Point(new Coord3d(x, y, z+height)));
@@ -407,6 +418,8 @@ public class HwlocDrawChart {
 	        polygon2.add(new Point(new Coord3d(x, y, z)));
 	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
 	        polygons.add(polygon2);
+	        
+	        /*
 	        //上面
 	        Polygon polygon3 = new Polygon();
 	        polygon3.add(new Point(new Coord3d(x+width, y, z+height)));
@@ -416,6 +429,7 @@ public class HwlocDrawChart {
 	        polygons.add(polygon3);
 	        //polygon.add(new Point(new Coord3d(x+width, y, z+height)));
 	        //polygon.add(new Point(new Coord3d(x+width, y, z)));
+*/
 
 	        //后面
 	        Polygon polygon4 = new Polygon();
@@ -447,7 +461,7 @@ public class HwlocDrawChart {
 	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
 	        polygons.add(polygon6);
 	        
-	        */
+	        
 	        Shape tempShape = new Shape(polygons);
 	        
 	        return tempShape;
