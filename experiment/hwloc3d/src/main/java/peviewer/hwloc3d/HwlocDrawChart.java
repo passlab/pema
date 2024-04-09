@@ -23,6 +23,8 @@ import xxx.peviewer.hwloc3d.xjcgenerated.Info;
 import xxx.peviewer.hwloc3d.xjcgenerated.Object;
 import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
 import org.jzy3d.plot3d.rendering.view.ViewportConfiguration;
+import org.jzy3d.plot3d.text.align.Horizontal;
+import org.jzy3d.plot3d.text.align.Vertical;
 
 public class HwlocDrawChart {
 	static Chart drawChart(Topology t) {
@@ -37,19 +39,26 @@ public class HwlocDrawChart {
 		chart.getView().setSquared(false);
 		chart.getView().setAxisDisplayed(false);
 		
-		
 		ITextRenderer r = new JOGLTextRenderer3d();
 		
 		//must be big enough for text padding but small enough for legible text
 		double l = 7;
 		double w = 7;
-		double h = 0;
+		double h = .15;
 		
 		//11x7 for haswell
 		
 		Object top = t.getObject().get(0);	
 		List<Object> tt = t.getObject();
-	
+		
+		
+		
+		//Demo with Custom.xml
+		/*
+		 * for (int o = 0; o<tt.size();o++) { recursiveChiplet(tt.get(o), new
+		 * Coord3d(0,0,0), new Coord3d(l,w,h), chart, r, .2); }
+		 */
+		
 		
 		
 		for (int o = 0; o<tt.size();o++) {
@@ -67,6 +76,135 @@ public class HwlocDrawChart {
 		return chart;
 	}
 	
+	//Assigns colors based on Custom.xml
+	public static Color colorpicker(Object o){
+		 Color color= Color.GRAY;
+		         if(o.getSubtype().equalsIgnoreCase("Interposer")) {
+
+		             color = Color.GRAY;
+
+		         }else if(o.getSubtype().equalsIgnoreCase("CPU")) {
+
+
+		             color = Color.YELLOW;
+		         }else if(o.getSubtype().equalsIgnoreCase("AI Accel.")){
+
+		             color = Color.GREEN;
+		         }else if(o.getSubtype().equalsIgnoreCase("FPGA")) {
+
+		             color = Color.MAGENTA;
+		         }else if(o.getSubtype().equalsIgnoreCase("IOS")) {
+
+		             color = Color.GRAY;
+		         }else if(o.getSubtype().equalsIgnoreCase("3D Memory")) {
+
+		             color = Color.YELLOW;
+		         }else if(o.getSubtype().equalsIgnoreCase("DRAM Die")) {
+
+		             color = Color.YELLOW;
+		         } 
+		         
+		         else if(o.getSubtype().equalsIgnoreCase("GPU")) {
+
+		             color = Color.RED;
+		         }
+		         else if(o.getSubtype().equalsIgnoreCase("Package")) {
+
+		             color = new Color(219,233,180);
+		         }
+		
+		         return color;
+	}
+
+	//Organize in grid
+	//make children constant size
+	//and recursively determine size of parents given size of chiplet component
+	public static void recursiveChiplet(Object o, Coord3d origin, Coord3d dim, Chart chart, ITextRenderer r, double pad) {
+		Color color =colorpicker(o);
+		
+		//spawn(origin, dim, color, chart, r, o.getSubtype());
+		
+		//draw takes the spawn point and length, width, and height but spawn takes coordinates for spawn and dim
+		//everything draws downwards at .15
+		//cannot access parent dim.z
+		Shape shape = draw(origin.x,origin.y,origin.z,dim.x-origin.x,dim.y-origin.y,-.15);
+		addColor(shape, color);
+		chart.getScene().getGraph().add(shape);
+		
+		List<Object> children = o.getObject();	
+		int num_children = children.size();
+		
+		
+		//use for loop instead or recursing into children
+		if (o.getSubtype().equals("3D Memory")) {
+			for (int m=0; m<num_children; m++) {
+				origin=origin.add(new Coord3d(0,0,.15));
+				Shape layer = draw(origin.x,origin.y,origin.z,dim.x-origin.x,dim.y-origin.y,-.15);
+				addColor(layer, color);
+				chart.getScene().getGraph().add(layer);
+			}
+			return;
+			
+		}
+		
+		//Save original x coordinate for grid layout
+		double originx = origin.x;
+		
+		
+		
+		//Grid layout
+		//Will have 3 columns, row count will depend on xml
+		if(num_children>3) {
+			int rows = (int) Math.ceil(num_children/3.0);
+			
+			//Reverse calculate height and width given a constant value for padding
+			double height = (double) (((dim.y-origin.y)-((rows+1)*pad))/rows);
+			double width = (double) (((dim.x-origin.x)-4*pad)/3);
+			
+			//z offset
+			//z is currently constant for all
+			//origin.z should match dim.z
+			//z if offset to spawn higher, but when spawning it is a constant because draw takes height
+			origin=origin.add(new Coord3d(pad, pad, origin.z));
+			dim = new Coord3d(origin.x+width,origin.y+height,origin.z);
+			
+			//System.out.println("dim is "+dim);
+			//System.out.println("alternative dim: "+ new Coord3d(dim.x-pad, dim.y-pad, 0));
+			
+			for (int u = 0; u < num_children; u++) {
+				recursiveChiplet(children.get(u), origin, dim, chart, r, pad);
+				origin = origin.add(new Coord3d(width+pad,0,0));
+				dim = dim.add(new Coord3d(width+pad,0,0));
+					
+				//reset x on start of new row
+				if ((u+1)%3==0) {
+					origin = new Coord3d(originx+pad, origin.y+height+pad,origin.z);
+					dim = new Coord3d(originx+pad+width, dim.y+height+pad,origin.z);
+				}
+				}
+			
+		} else {
+			//split into multiple rows in one 1 column
+			double height = (double) ((dim.y-origin.y)-((num_children+1)*pad));
+			double width = (double) ((dim.x-origin.x)-pad);
+			
+			//z offset upwards, draws downwards
+			origin = origin.add(new Coord3d(pad,pad,dim.z));
+			//****************dim calculation is different???
+			dim = new Coord3d(dim.x-pad,height+pad, origin.z);
+			
+			//****************not tested with multiple children in parent
+			for (int a = 0; a < num_children; a++) {
+				recursiveChiplet(children.get(a),  origin,  dim, chart, r, pad);
+				origin = origin.add(new Coord3d(0,width+pad,0));
+				dim = dim.add(new Coord3d(0,width+pad,0));
+				}
+			
+		}
+			
+			
+		}
+		
 	
 	private static void recursiveBridgeDraw(Object o, Coord3d origin, Chart chart, ITextRenderer r) {
 		double x = (double) origin.x;
@@ -124,7 +262,6 @@ public class HwlocDrawChart {
 				
 	}
 
-	//trace the code lol should have tested if it was working first
 	private static int count(Object o, String component) {
 		
 		int count = 0;
@@ -168,10 +305,12 @@ public class HwlocDrawChart {
 		//color picking
 		Color color = Color.WHITE;
 		if (o.getType().equals("Package")) {color = new Color(219,233,180);
+		
+		/*
 		System.out.println(findcpumodel(o));
 		DrawableTextWrapper txt = new DrawableTextWrapper(findcpumodel(o), new Coord3d(origin.x, 1+dim.y, .15), Color.BLACK, r);
 		chart.getScene().getGraph().add(txt);
-		
+		*/
 		}
 		else if (o.getType().equals("Core")) {color = Color.GRAY;}
 		else if (o.getType().equals("NUMANode")) {color = new Color(160,150,150);}
@@ -273,7 +412,7 @@ public class HwlocDrawChart {
 	
 	public static String findcpumodel(Object o) {
 		String name = "";
-		
+		//find package
 		List<Info> info = o.getInfo();
 		
 		//cpumodel is inside the get info list of package, might not always be 1st value
@@ -310,21 +449,16 @@ public class HwlocDrawChart {
 	
 		//generate cube with color and add to chart
 		public static void spawn(Coord3d spawn, Coord3d spawn2, Color color, Chart chart, ITextRenderer r, String s) {
+			
 			List<Polygon> temp = new ArrayList<Polygon>();
-		    boxGen(temp, spawn, spawn2);
+		    
+		    
+			Shape shape = draw(spawn.x,spawn.y,spawn.z,spawn2.x-spawn.x,spawn2.y-spawn.y,-.15);
+			addColor(shape, color);
+			chart.getScene().getGraph().add(shape);
 		    
 		    
 		    
-		    //Shape tempShape = draw(spawn.x, spawn.y, spawn.z, spawn2.x, spawn2.y, spawn.z);
-		    Shape tempShape = new Shape(temp);
-		    addColor(tempShape, color);
-		    chart.getScene().getGraph().add(tempShape);
-		    
-		    /*
-		    Shape sides = draw(spawn.x, spawn.y, spawn.z-.3, spawn2.x, spawn2.y, spawn.z-.15);
-		    addColor(sides, color);
-		    chart.getScene().getGraph().add(sides);
-			*/
 			if (s != null) {
 				DrawableTextWrapper txt = new DrawableTextWrapper(s, new Coord3d(spawn.x,spawn2.y-.2,spawn.z), Color.BLACK, r);
 				chart.getScene().getGraph().add(txt);
@@ -391,6 +525,7 @@ public class HwlocDrawChart {
 		//that's why going all around doesn't work
 		
 		//master function for drawing cubes
+		//can accept negative height to draw downwards
 		static Shape draw(double x, double y , double z, double width, double length, double height){
 			//from bottom left to upper right corner
 	        List<Polygon> polygons = new ArrayList<Polygon>();
@@ -400,7 +535,7 @@ public class HwlocDrawChart {
 	        //don't need the bottom
 	        //draw sides offset with height being neg .15
 	        
-	        /*
+	        
 	        //下面
 	        polygon.add(new Point(new Coord3d(x, y, z)));
 	        polygon.add(new Point(new Coord3d(x, y+length, z)));
@@ -408,7 +543,7 @@ public class HwlocDrawChart {
 	        polygon.add(new Point(new Coord3d(x+width, y, z)));
 	        //polygon.add(new Point(new Coord3d(x, y, z)));
 	        polygons.add(polygon);
-	        */
+	        
 	        
 	        //左边
 	        Polygon polygon2 = new Polygon();
@@ -419,7 +554,7 @@ public class HwlocDrawChart {
 	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
 	        polygons.add(polygon2);
 	        
-	        /*
+	        
 	        //上面
 	        Polygon polygon3 = new Polygon();
 	        polygon3.add(new Point(new Coord3d(x+width, y, z+height)));
@@ -429,7 +564,7 @@ public class HwlocDrawChart {
 	        polygons.add(polygon3);
 	        //polygon.add(new Point(new Coord3d(x+width, y, z+height)));
 	        //polygon.add(new Point(new Coord3d(x+width, y, z)));
-*/
+
 
 	        //后面
 	        Polygon polygon4 = new Polygon();
@@ -460,6 +595,8 @@ public class HwlocDrawChart {
 	        polygon6.add(new Point(new Coord3d(x+width, y+length, z)));
 	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
 	        polygons.add(polygon6);
+	        
+	        
 	        
 	        
 	        Shape tempShape = new Shape(polygons);
