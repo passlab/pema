@@ -39,22 +39,22 @@ public class HwlocDrawChart {
 		//Only tested with start as (0,0,0)
 		//Uncomment to visualize Custom.xml
 		
-		double l = 4;
-		double w = 5;
-		//must be .15 to match with spawn
-		double h = .15;
-		 for (int o = 0; o<tt.size();o++) { recursiveChiplet(tt.get(o), new
-		 Coord3d(0,0,0), new Coord3d(l,w,h), chart, r, .2); }
+//		double l = 4;
+//		double w = 5;
+//		//must be .15 to match with spawn
+//		double h = .15;
+//		 for (int o = 0; o<tt.size();o++) { recursiveChiplet(tt.get(o), new
+//		 Coord3d(0,0,0), new Coord3d(l,w,h), chart, r, .2); }
 
 		
 		//Uncomment to visualize Haswell xml
 		
-//		double l = 7;
-//		double w = 7;
-//		double h = .15;
-//		for (int o = 0; o < tt.size();o++) {
-//	    	recursiveDraw(tt.get(o), new Coord3d(0,0,0), new Coord3d(l,w,h), chart, r);
-//	    }
+		double l = 7;
+		double w = 7;
+		double h = .15;
+		for (int o = 0; o < tt.size();o++) {
+	    	recursiveDraw(tt.get(o), new Coord3d(0,0,0), new Coord3d(l,w,h), chart, r);
+	    }
 	    
 		ChartLauncher.openChart(chart, "HWLOC3D Chart");
 		return chart;
