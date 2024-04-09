@@ -10,6 +10,7 @@ import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
 
 public class LoadHwloc2XMLFile {
 	public static Topology loadHwloc2XMLFile(File hwloc2XMLFile) {
+	Topology topTop;
 		try {
 			System.setProperty("javax.xml.accessExternalDTD", "all");
 			// creating the JAXB context
@@ -17,11 +18,8 @@ public class LoadHwloc2XMLFile {
 			// creating the unmarshall object
 			Unmarshaller unmarshallerObj = jContext.createUnmarshaller();
 			// calling the unmarshall method
-			Topology topTop = (Topology) unmarshallerObj.unmarshal(hwloc2XMLFile);
+			topTop = (Topology) unmarshallerObj.unmarshal(hwloc2XMLFile);
 
-			System.out.println(topTop);
-			System.out.println(topTop.getVersion());
-			//Breakpoint here
 			return topTop;			
 			
 		} catch (Exception e) {

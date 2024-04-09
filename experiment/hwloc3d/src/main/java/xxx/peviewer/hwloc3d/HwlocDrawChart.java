@@ -21,9 +21,13 @@ import xxx.peviewer.hwloc3d.xjcgenerated.Info;
 import xxx.peviewer.hwloc3d.xjcgenerated.Object;
 import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
 
+import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
+
 public class HwlocDrawChart {
+
 	static Chart drawChart(Topology t) {
 		
+
 		IChartFactory f = new AWTChartFactory();
 		
 		Chart chart = f.newChart(Quality.Fastest().setHiDPIEnabled(true));
