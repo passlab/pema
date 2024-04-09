@@ -13,8 +13,6 @@ import org.jzy3d.plot3d.primitives.Point;
 import org.jzy3d.plot3d.primitives.Polygon;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
-import org.jzy3d.plot3d.rendering.view.Camera;
-import org.jzy3d.plot3d.rendering.view.modes.CameraMode;
 import org.jzy3d.plot3d.text.ITextRenderer;
 import org.jzy3d.plot3d.text.drawable.DrawableTextWrapper;
 import org.jzy3d.plot3d.text.renderers.jogl.JOGLTextRenderer3d;
@@ -22,55 +20,42 @@ import org.jzy3d.plot3d.text.renderers.jogl.JOGLTextRenderer3d;
 import xxx.peviewer.hwloc3d.xjcgenerated.Info;
 import xxx.peviewer.hwloc3d.xjcgenerated.Object;
 import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
-import org.jzy3d.plot3d.rendering.view.ViewportConfiguration;
-import org.jzy3d.plot3d.text.align.Horizontal;
-import org.jzy3d.plot3d.text.align.Vertical;
 
 public class HwlocDrawChart {
 	static Chart drawChart(Topology t) {
-		// Create a chart to add surfaces to
+		
 		IChartFactory f = new AWTChartFactory();
+		
 		Chart chart = f.newChart(Quality.Fastest().setHiDPIEnabled(true));
-		//Advanced and nicest quality creates clipping
-		//possibly depth buffer issue
-		
-		
+		//Advanced and Nicest quality throws errors
 		chart.getView().setMaximized(true);
 		chart.getView().setSquared(false);
 		chart.getView().setAxisDisplayed(false);
 		
 		ITextRenderer r = new JOGLTextRenderer3d();
 		
-		//must be big enough for text padding but small enough for legible text
-		double l = 7;
-		double w = 7;
-		double h = .15;
 		
-		//11x7 for haswell
-		
+		//Starts with machine, assuming there was only 1 child in toptop
 		Object top = t.getObject().get(0);	
 		List<Object> tt = t.getObject();
 		
-		
-		
 		//Demo with Custom.xml
-		/*
-		 * for (int o = 0; o<tt.size();o++) { recursiveChiplet(tt.get(o), new
-		 * Coord3d(0,0,0), new Coord3d(l,w,h), chart, r, .2); }
-		 */
 		
-		
-		
-		for (int o = 0; o<tt.size();o++) {
-	    	recursiveDraw(tt.get(o), new Coord3d(0,0,0), new Coord3d(l,w,h), chart, r);
-	    }
-	    
-	    
-	/*
-		Shape tempShape = draw(0,0,0,1,1,0);
-	    addColor(tempShape, Color.YELLOW);
-	    chart.getScene().getGraph().add(tempShape);
-	*/
+		double l = 3;
+		double w = 4;
+		double h = .15;
+		 for (int o = 0; o<tt.size();o++) { recursiveChiplet(tt.get(o), new
+		 Coord3d(0,0,0), new Coord3d(l,w,h), chart, r, .2); }
+		 
+		//must be big enough for text padding but small enough for legible text
+				//11x7 for haswell
+				
+//		double l = 7;
+//		double w = 7;
+//		double h = .15;
+//		for (int o = 0; o < tt.size();o++) {
+//	    	recursiveDraw(tt.get(o), new Coord3d(0,0,0), new Coord3d(l,w,h), chart, r);
+//	    }
 	    
 		ChartLauncher.openChart(chart, "HWLOC3D Chart");
 		return chart;
@@ -79,41 +64,35 @@ public class HwlocDrawChart {
 	//Assigns colors based on Custom.xml
 	public static Color colorpicker(Object o){
 		 Color color= Color.GRAY;
-		         if(o.getSubtype().equalsIgnoreCase("Interposer")) {
+         if (o.getSubtype().equalsIgnoreCase("Interposer")) {
+        	 
+             color = Color.GRAY;
+         } else if(o.getSubtype().equalsIgnoreCase("CPU")) {
+        	 
+             color = Color.YELLOW;
+         } else if(o.getSubtype().equalsIgnoreCase("AI Accel.")){
 
-		             color = Color.GRAY;
+             color = Color.GREEN;
+         } else if(o.getSubtype().equalsIgnoreCase("FPGA")) {
 
-		         }else if(o.getSubtype().equalsIgnoreCase("CPU")) {
+             color = Color.MAGENTA;
+         } else if(o.getSubtype().equalsIgnoreCase("IOS")) {
 
+             color = Color.GRAY;
+         } else if(o.getSubtype().equalsIgnoreCase("3D Memory")) {
 
-		             color = Color.YELLOW;
-		         }else if(o.getSubtype().equalsIgnoreCase("AI Accel.")){
+             color = Color.YELLOW;
+         } else if(o.getSubtype().equalsIgnoreCase("DRAM Die")) {
 
-		             color = Color.GREEN;
-		         }else if(o.getSubtype().equalsIgnoreCase("FPGA")) {
+             color = Color.YELLOW;
+         } else if(o.getSubtype().equalsIgnoreCase("GPU")) {
 
-		             color = Color.MAGENTA;
-		         }else if(o.getSubtype().equalsIgnoreCase("IOS")) {
+             color = Color.RED;
+         } else if(o.getSubtype().equalsIgnoreCase("Package")) {
 
-		             color = Color.GRAY;
-		         }else if(o.getSubtype().equalsIgnoreCase("3D Memory")) {
-
-		             color = Color.YELLOW;
-		         }else if(o.getSubtype().equalsIgnoreCase("DRAM Die")) {
-
-		             color = Color.YELLOW;
-		         } 
-		         
-		         else if(o.getSubtype().equalsIgnoreCase("GPU")) {
-
-		             color = Color.RED;
-		         }
-		         else if(o.getSubtype().equalsIgnoreCase("Package")) {
-
-		             color = new Color(219,233,180);
-		         }
-		
-		         return color;
+             color = new Color(219,233,180);
+         }
+         return color;
 	}
 
 	//Organize in grid
@@ -122,18 +101,19 @@ public class HwlocDrawChart {
 	public static void recursiveChiplet(Object o, Coord3d origin, Coord3d dim, Chart chart, ITextRenderer r, double pad) {
 		Color color =colorpicker(o);
 		
-		//spawn(origin, dim, color, chart, r, o.getSubtype());
+		spawn(origin, dim, color, chart, r, o.getSubtype());
 		
 		//draw takes the spawn point and length, width, and height but spawn takes coordinates for spawn and dim
 		//everything draws downwards at .15
 		//cannot access parent dim.z
-		Shape shape = draw(origin.x,origin.y,origin.z,dim.x-origin.x,dim.y-origin.y,-.15);
-		addColor(shape, color);
-		chart.getScene().getGraph().add(shape);
+		
+		
+//		Shape shape = draw(origin.x,origin.y,origin.z,dim.x-origin.x,dim.y-origin.y,-.15);
+//		addColor(shape, color);
+//		chart.getScene().getGraph().add(shape);
 		
 		List<Object> children = o.getObject();	
 		int num_children = children.size();
-		
 		
 		//use for loop instead or recursing into children
 		if (o.getSubtype().equals("3D Memory")) {
@@ -143,6 +123,9 @@ public class HwlocDrawChart {
 				addColor(layer, color);
 				chart.getScene().getGraph().add(layer);
 			}
+			
+			DrawableTextWrapper txt = new DrawableTextWrapper(o.getSubtype(), new Coord3d(origin.x,dim.y-.2,origin.z), Color.BLACK, r);
+			chart.getScene().getGraph().add(txt);
 			return;
 			
 		}
@@ -205,8 +188,7 @@ public class HwlocDrawChart {
 			
 		}
 		
-	
-	private static void recursiveBridgeDraw(Object o, Coord3d origin, Chart chart, ITextRenderer r) {
+	public static void recursiveBridgeDraw(Object o, Coord3d origin, Chart chart, ITextRenderer r) {
 		double x = (double) origin.x;
 		double y = (double) origin.y;
 		
@@ -262,7 +244,7 @@ public class HwlocDrawChart {
 				
 	}
 
-	private static int count(Object o, String component) {
+	public static int count(Object o, String component) {
 		
 		int count = 0;
 		//System.out.println(o.getName());
@@ -278,10 +260,8 @@ public class HwlocDrawChart {
 		}
 		return count;
 	}
-	
-	
-	
-	private static void drawLine(Coord3d origin, Coord3d coord3d, Chart chart) {
+
+	public static void drawLine(Coord3d origin, Coord3d coord3d, Chart chart) {
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		
 		Polygon polygon = new Polygon();
@@ -300,60 +280,61 @@ public class HwlocDrawChart {
 	    chart.getScene().getGraph().add(tempShape);
 	}
 
-
 	public static void recursiveDraw(Object o, Coord3d origin, Coord3d dim, Chart chart, ITextRenderer r) {
-		//color picking
-		Color color = Color.WHITE;
-		if (o.getType().equals("Package")) {color = new Color(219,233,180);
-		
-		/*
-		System.out.println(findcpumodel(o));
-		DrawableTextWrapper txt = new DrawableTextWrapper(findcpumodel(o), new Coord3d(origin.x, 1+dim.y, .15), Color.BLACK, r);
-		chart.getScene().getGraph().add(txt);
-		*/
+		//Label CPU Model
+		if (o.getType().equals("Machine")) {
+			DrawableTextWrapper txt = new DrawableTextWrapper(findcpumodel(o), new Coord3d(origin.x, .5+dim.y, .15), Color.BLACK, r);
+			chart.getScene().getGraph().add(txt);
 		}
+		
+		//Assign color
+		Color color = Color.WHITE;
+		if (o.getType().equals("Package")) {color = new Color(219,233,180);}
 		else if (o.getType().equals("Core")) {color = Color.GRAY;}
 		else if (o.getType().equals("NUMANode")) {color = new Color(160,150,150);}
 		
-		if (o.getSubtype().equals("hbm")) {color = Color.RED;}
-		
-		
+		//Draw shape
 		spawn(origin, dim, color, chart, r, o.getType());
 		
 		List<Object> children = o.getObject();	
 		int num_children = children.size();
 		
-		//If xml contains a bridge, deincrement num_children so no space is allocated for it
-		//bridge will be draw separately
-		for (int y =0; y<num_children; y++) {
+		//If topology contains a bridge child, deincrement num_children so no space is allocated for it
+		//Bridge is drawn with a separate helper function
+		//ASSUMES BRIDGE IS THE LAST CHILD IN THE LIST
+		for (int y = 0; y < num_children; y++) {
 			if (children.get(y).getType().equals("Bridge")) {
 				num_children--;
-				
-				//draw bridge parts to the right
+				//Draw bridge parts to the right
 					recursiveBridgeDraw(children.get(y), dim.add(new Coord3d(.3, 0, 0)), chart, r);
-				//draw bridge parts on bottom
-				//scope is in very top loop so origin and dim are the og ones
-				//recursiveBridgeDraw(children.get(y), new Coord3d(origin.x, origin.y-.5, origin.z), chart, r);
-				//draw machine last to encapsulate everything?
+				//Draw bridge parts on bottom
+				//Can cause overlapping issues if bridge is nested
+					//recursiveBridgeDraw(children.get(y), new Coord3d(origin.x, origin.y-.5, origin.z), chart, r);
 			}
 		}
 		
-		//add top padding for text by shrinking dim.y
+		//Add top padding for text
 		dim = new Coord3d(dim.x, dim.y-.15, dim.z);
 		
 		//padding segments is 1 + num children
 		//split vertically
-		 if (dim.x>dim.y && num_children >3) {
+		//used by l2s, groups, and packages
+		//maybe split to grid for other 2
+		if (dim.x>dim.y && num_children >3) {
 			
-			 int L2count = num_children;
-		//fewer l2s
+			int L2count = num_children;
+		
+			//fewer l2s
 			if (o.getType().equals("L3Cache") || o.getType().equals("L2Cache")) {
 				num_children =3;
 			}
 					
 			double pad = (double) (dim.x*.05)/(num_children+1);
 			double width = (double) (dim.x*.95/num_children);
-			//top padding
+			
+			//double width = (double) ((dim.x-origin.x)-pad);
+			
+			
 			
 			//only origin z gets incremented
 			origin = origin.add(new Coord3d(pad, 0.15,0.15));
@@ -390,55 +371,59 @@ public class HwlocDrawChart {
 				
 			//partition horizontally
 		} else {
+			
+			//double height = (double) (((dim.y-origin.y)-((num_children+1)*pad))/num_children);
+			
 			double pad = (double) (dim.y*.05)/(num_children+1);
 			
-			double width = (double) (dim.y*.95/num_children);
+			double height = (double) (dim.y*.95/num_children);
 			
-			//if other child is bridge, deincrement children, no need to allocate space
-			//but then top layer doesn't run?
 			
 			origin = origin.add(new Coord3d(0.15,pad,0.15));
 			
-				dim = new Coord3d(dim.x-.1,width, 0);
+				dim = new Coord3d(dim.x-.1,height, 0);
 				
 				for (int a = 0; a < num_children; a++) {
 					recursiveDraw(children.get(a),  origin,  dim, chart, r);
-					origin = origin.add(new Coord3d(0,width,0));
-					dim = dim.add(new Coord3d(0,width,0));
+					origin = origin.add(new Coord3d(0,height,0));
+					dim = dim.add(new Coord3d(0,height,0));
 					}
 		}
 		}
 		
-	
+	/**
+	 * Finds CPU Model of the topology
+	 * @param o Machine object to search CPU Model of
+	 */
 	public static String findcpumodel(Object o) {
 		String name = "";
-		//find package
+		
+		for (int a = 0; a< o.getObject().size(); a++) {
+			//Get the first Package inside Machine
+			if (o.getObject().get(a).getType().equals("Package")) {
+				o = o.getObject().get(a);
+				break;
+			}
+		}
+		
 		List<Info> info = o.getInfo();
 		
-		//cpumodel is inside the get info list of package, might not always be 1st value
-		
-		for (int b = 0; b< info.size(); b++) {
-			if (info.get(b).getName().equals("CPUModel")) {
-				return info.get(b).getValue();
+		//CPUModel is inside the get info list of Package
+		for (int x = 0; x< info.size(); x++) {
+			if (info.get(x).getName().equals("CPUModel")) {
+				return info.get(x).getValue();
 			}
 		}
 		
 		return name;
 	}
 	
-	public static void addFace(List<Polygon> faceslist, Coord3d c1, Coord3d c2,Coord3d c3, Coord3d c4)
-	  {
-	    Polygon polygon = new Polygon();
-	    polygon.add(new Point(c1));
-	    polygon.add(new Point(c2));
-	    polygon.add(new Point(c3));
-	    polygon.add(new Point(c4));
-	    faceslist.add(polygon);
-	    
-	  }
-	
-	//helper method to add wireframe, color, etc.
-		public static void addColor(Shape shape, Color color)
+/**
+ 	* Helper method to set color, wireframe, etc.
+ * @param shape Shape to color
+ * @param color Color shape is set to
+ */
+	public static void addColor(Shape shape, Color color)
 		  {
 			shape.setFaceDisplayed(true);
 			shape.setColor(color);
@@ -447,165 +432,104 @@ public class HwlocDrawChart {
 			shape.setWireframeWidth(2);
 		   }
 	
-		//generate cube with color and add to chart
-		public static void spawn(Coord3d spawn, Coord3d spawn2, Color color, Chart chart, ITextRenderer r, String s) {
-			
-			List<Polygon> temp = new ArrayList<Polygon>();
-		    
-		    
-			Shape shape = draw(spawn.x,spawn.y,spawn.z,spawn2.x-spawn.x,spawn2.y-spawn.y,-.15);
-			addColor(shape, color);
-			chart.getScene().getGraph().add(shape);
-		    
-		    
-		    
-			if (s != null) {
-				DrawableTextWrapper txt = new DrawableTextWrapper(s, new Coord3d(spawn.x,spawn2.y-.2,spawn.z), Color.BLACK, r);
-				chart.getScene().getGraph().add(txt);
-			}
+	/**
+	 * Draws the component, adds color, and adds to chart with helper functions addColor and draw. 
+	 * Currently the height passed to draw is fixed to -0.15 to match the offset in recursiveDraw.
+	 * Text is drawn with a slight offset. 
+	 * 
+	 * @param spawn Coord3d where the Shape starts drawing
+	 * @param spawn2 Coord3d where the Shape finishes drawing
+	 * @param color Color assigned to the Shape
+	 * @param chart Chart that Shapes are added to to be displayed
+	 * @param r ITextRenderer used for rendering the text label
+	 * @param s String used for labeling the drawn component
+	 */
+	public static void spawn(Coord3d spawn, Coord3d spawn2, Color color, Chart chart, ITextRenderer r, String s) {
+		Shape shape = draw(spawn.x,spawn.y,spawn.z,spawn2.x-spawn.x,spawn2.y-spawn.y,-.15);
+		addColor(shape, color);
+		chart.getScene().getGraph().add(shape);
+	    
+	    if (s != null) {
+			DrawableTextWrapper txt = new DrawableTextWrapper(s, new Coord3d(spawn.x,spawn2.y-.2,spawn.z), Color.BLACK, r);
+			chart.getScene().getGraph().add(txt);
 		}
+	}
+	
+	/**
+	 * Draws a box from a given xyz coord with a given length, width, and height.
+	 * 	Points composed of Coord3ds make up individual Polygons, which are the sides of the box.
+	 * 	The arraylist of Polygons forms a Shape, which is the box that is returned.
+	 * 	
+	 * 	Draws outwards from xyz to length, width, and height.
+	 * 	Accepts negative values for height to draw downwards
+	 * 	Setting height to 0 draws 2D planes
+	 * 
+	 * @param x the x coordinate you start drawing from
+	 * @param y the y coordinate you start drawing from
+	 * @param z the z coordinate you start drawing from
+	 * @param width the width of the box (x-axis)
+	 * @param length the length of the box (y-axis)
+	 * @param height the height of the box (z-axis)
+	 * @return a Shape object of the created box
+	 */
+	public static Shape draw(double x, double y , double z, double width, double length, double height){
 		
-	//helper method to create cubes and 3d rectangles
-		//currently only in 2d
-		public static void boxGen(List<Polygon> faceslist, Coord3d spawn, Coord3d spawn2)
-		  {
-			
-			//spawn at spawnpoint to to final			
-			//spawn2 > spawn
-			
-			//lwh --> xyz
-			Coord3d o = spawn;
-			Coord3d x = new Coord3d(spawn2.x, spawn.y, spawn.z);
-		    Coord3d y = new Coord3d(spawn.x, spawn2.y, spawn.z);
-		    Coord3d z = new Coord3d(0,0,spawn2.z);
+        List<Polygon> sides = new ArrayList<Polygon>();
+        
+        //下面
+        Polygon bottom = new Polygon();
+        bottom.add(new Point(new Coord3d(x, y, z)));
+        bottom.add(new Point(new Coord3d(x, y+length, z)));
+        bottom.add(new Point(new Coord3d(x+width, y+length, z)));
+        bottom.add(new Point(new Coord3d(x+width, y, z)));
+        sides.add(bottom);
+        
+        if (height != 0) {
+        	//左边
+            Polygon left = new Polygon();
+            left.add(new Point(new Coord3d(x, y, z+height)));
+            left.add(new Point(new Coord3d(x, y+length, z+height)));
+            left.add(new Point(new Coord3d(x, y+length, z)));
+            left.add(new Point(new Coord3d(x, y, z)));
+            sides.add(left);
+            
+            //上面
+            Polygon top = new Polygon();
+            top.add(new Point(new Coord3d(x+width, y, z+height)));
+            top.add(new Point(new Coord3d(x+width, y+length, z+height)));
+            top.add(new Point(new Coord3d(x, y+length, z+height)));
+            top.add(new Point(new Coord3d(x, y, z+height)));
+            sides.add(top);
 
-		    
-		    //only uses xy of spawn and spawn2
-		    //bottom
-			addFace(faceslist, o, x, new Coord3d(spawn2.x, spawn2.y, spawn.z), y);
-			//using push face makes the text separate for some reason
-			
-			//top
-		    //pushFace(faceslist, o, x, new Coord3d(spawn2.x, spawn2.y, spawn.z), y, z);
-			
-			
-			//SIDES
-			//.15 thick
-			
-			//front
-			/*
-			addFace(faceslist, o, new Coord3d(spawn.x,spawn.y,spawn.z-.15), new Coord3d(spawn2.x, spawn2.y, spawn2.z-.15), new Coord3d(spawn2.x, spawn.y, spawn.z));
-			//back
-			pushFace(faceslist, o, new Coord3d(spawn.x,spawn.y,spawn.z-.15), new Coord3d(spawn2.x, spawn2.y, spawn2.z-.15), new Coord3d(spawn2.x, spawn.y, spawn.z), new Coord3d(0,spawn2.y,0));
-			//l
-			addFace(faceslist, o, x, x.add(z), z);
-			//r
-			pushFace(faceslist, o, x, x.add(z), z,y);
-			*/
-		   }
+            //后面
+            Polygon back = new Polygon();
+            back.add(new Point(new Coord3d(x+width, y+length, z)));
+            back.add(new Point(new Coord3d(x+width, y+length, z+height)));
+            back.add(new Point(new Coord3d(x, y+length, z+height)));
+            back.add(new Point(new Coord3d(x, y+length, z)));
+            sides.add(back);
+
+            //前面
+            Polygon front = new Polygon();
+            front.add(new Point(new Coord3d(x,y,z)));
+            front.add(new Point(new Coord3d(x+width, y,z)));
+            front.add(new Point(new Coord3d(x+width, y, z+height)));
+            front.add(new Point(new Coord3d(x, y, z+height)));
+            sides.add(front);
+            
+            //右边
+            Polygon right = new Polygon();
+            right.add(new Point(new Coord3d(x+width, y, z)));
+            right.add(new Point(new Coord3d(x+width, y, z+height)));
+            right.add(new Point(new Coord3d(x+width, y+length, z+height)));
+            right.add(new Point(new Coord3d(x+width, y+length, z)));
+            sides.add(right);
+        	
+        }
+        
+        Shape box = new Shape(sides);
+        return box;
+
+    }
 		
-	//helper method to add faces, increasing all coords by a given coord	
-		public static void pushFace(List<Polygon> faceslist, Coord3d c1, Coord3d c2,Coord3d c3, Coord3d c4, Coord3d c5)
-		  {
-		    Polygon polygon = new Polygon();
-		    polygon.add(new Point(c1.add(c5)));
-		    polygon.add(new Point(c2.add(c5)));
-		    polygon.add(new Point(c3.add(c5)));
-		    polygon.add(new Point(c4.add(c5)));
-		    faceslist.add(polygon);
-		    
-		  }
-		
-		
-		//helper method to add faces
-		
-		//a list of Polygons contains Polygons made from distinct points
-		//the list is then used as a shape
-		//that's why there was face stretching before
-		//that's why going all around doesn't work
-		
-		//master function for drawing cubes
-		//can accept negative height to draw downwards
-		static Shape draw(double x, double y , double z, double width, double length, double height){
-			//from bottom left to upper right corner
-	        List<Polygon> polygons = new ArrayList<Polygon>();
-	        Polygon polygon = new Polygon();
-
-	        
-	        //don't need the bottom
-	        //draw sides offset with height being neg .15
-	        
-	        
-	        //下面
-	        polygon.add(new Point(new Coord3d(x, y, z)));
-	        polygon.add(new Point(new Coord3d(x, y+length, z)));
-	        polygon.add(new Point(new Coord3d(x+width, y+length, z)));
-	        polygon.add(new Point(new Coord3d(x+width, y, z)));
-	        //polygon.add(new Point(new Coord3d(x, y, z)));
-	        polygons.add(polygon);
-	        
-	        
-	        //左边
-	        Polygon polygon2 = new Polygon();
-	        polygon2.add(new Point(new Coord3d(x, y, z+height)));
-	        polygon2.add(new Point(new Coord3d(x, y+length, z+height)));
-	        polygon2.add(new Point(new Coord3d(x, y+length, z)));
-	        polygon2.add(new Point(new Coord3d(x, y, z)));
-	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
-	        polygons.add(polygon2);
-	        
-	        
-	        //上面
-	        Polygon polygon3 = new Polygon();
-	        polygon3.add(new Point(new Coord3d(x+width, y, z+height)));
-	        polygon3.add(new Point(new Coord3d(x+width, y+length, z+height)));
-	        polygon3.add(new Point(new Coord3d(x, y+length, z+height)));
-	        polygon3.add(new Point(new Coord3d(x, y, z+height)));
-	        polygons.add(polygon3);
-	        //polygon.add(new Point(new Coord3d(x+width, y, z+height)));
-	        //polygon.add(new Point(new Coord3d(x+width, y, z)));
-
-
-	        //后面
-	        Polygon polygon4 = new Polygon();
-	        polygon4.add(new Point(new Coord3d(x+width, y+length, z)));
-	        polygon4.add(new Point(new Coord3d(x+width, y+length, z+height)));
-	        polygon4.add(new Point(new Coord3d(x, y+length, z+height)));
-	        polygon4.add(new Point(new Coord3d(x, y+length, z)));
-	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
-	        polygons.add(polygon4);
-
-	        
-	        
-	      //前面
-	        Polygon polygon5 = new Polygon();
-	        polygon5.add(new Point(new Coord3d(x,y,z)));
-	        polygon5.add(new Point(new Coord3d(x+width, y,z)));
-	        polygon5.add(new Point(new Coord3d(x+width, y, z+height)));
-	        polygon5.add(new Point(new Coord3d(x, y, z+height)));
-	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
-	        polygons.add(polygon5);
-	        
-	        
-	        //右边
-	        Polygon polygon6 = new Polygon();
-	        polygon6.add(new Point(new Coord3d(x+width, y, z)));
-	        polygon6.add(new Point(new Coord3d(x+width, y, z+height)));
-	        polygon6.add(new Point(new Coord3d(x+width, y+length, z+height)));
-	        polygon6.add(new Point(new Coord3d(x+width, y+length, z)));
-	        //polygon.add(new Point(new Coord3d(x, y, z+height)));
-	        polygons.add(polygon6);
-	        
-	        
-	        
-	        
-	        Shape tempShape = new Shape(polygons);
-	        
-	        return tempShape;
-
-	    }
-		
-
 }
-
-
