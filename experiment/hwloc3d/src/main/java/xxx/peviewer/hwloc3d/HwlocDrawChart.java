@@ -1,4 +1,4 @@
-package peviewer.hwloc3d;
+package xxx.peviewer.hwloc3d;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,22 +34,21 @@ public class HwlocDrawChart {
 		
 		ITextRenderer r = new JOGLTextRenderer3d();
 		
-		
-		//Starts with machine, assuming there was only 1 child in toptop
-		Object top = t.getObject().get(0);	
 		List<Object> tt = t.getObject();
 		
-		//Demo with Custom.xml
+		//Only tested with start as (0,0,0)
+		//Uncomment to visualize Custom.xml
 		
-		double l = 3;
-		double w = 4;
+		double l = 4;
+		double w = 5;
+		//must be .15 to match with spawn
 		double h = .15;
 		 for (int o = 0; o<tt.size();o++) { recursiveChiplet(tt.get(o), new
 		 Coord3d(0,0,0), new Coord3d(l,w,h), chart, r, .2); }
-		 
-		//must be big enough for text padding but small enough for legible text
-				//11x7 for haswell
-				
+
+		
+		//Uncomment to visualize Haswell xml
+		
 //		double l = 7;
 //		double w = 7;
 //		double h = .15;
@@ -95,35 +94,41 @@ public class HwlocDrawChart {
          return color;
 	}
 
-	//Organize in grid
-	//make children constant size
-	//and recursively determine size of parents given size of chiplet component
+	/**
+	 * Recursive function to draw Custom.xml with a grid layout.
+	 * Work in progress.
+	 * Calculates side of children given the padding
+	 * 
+	 * @param o Parent object to recurse
+	 * @param origin Coordinate where shape sharts drawing. Only tested with (0,0,0)
+	 * @param dim Coordinate where shape finishes drawing
+	 * @param chart CHart to add shape to
+	 * @param r ITextRenderer for text labels
+	 * @param pad Padding from sides
+	 */
 	public static void recursiveChiplet(Object o, Coord3d origin, Coord3d dim, Chart chart, ITextRenderer r, double pad) {
 		Color color =colorpicker(o);
 		
 		spawn(origin, dim, color, chart, r, o.getSubtype());
 		
-		//draw takes the spawn point and length, width, and height but spawn takes coordinates for spawn and dim
-		//everything draws downwards at .15
-		//cannot access parent dim.z
-		
-		
-//		Shape shape = draw(origin.x,origin.y,origin.z,dim.x-origin.x,dim.y-origin.y,-.15);
-//		addColor(shape, color);
-//		chart.getScene().getGraph().add(shape);
+		//Add top padding for text
+		dim = dim.add(new Coord3d(0,-.1,0));
 		
 		List<Object> children = o.getObject();	
 		int num_children = children.size();
 		
-		//use for loop instead or recursing into children
+		//Children of 3D Memory are stacked instead of placed in a grid
+		//Use for loop instead or recursing into children
 		if (o.getSubtype().equals("3D Memory")) {
-			for (int m=0; m<num_children; m++) {
-				origin=origin.add(new Coord3d(0,0,.15));
-				Shape layer = draw(origin.x,origin.y,origin.z,dim.x-origin.x,dim.y-origin.y,-.15);
+			for (int m = 0; m < num_children; m++) {
+				origin = origin.add(new Coord3d(0,0,.15));
+				//add top padding
+				Shape layer = draw(origin.x,origin.y,origin.z,dim.x-origin.x,dim.y-origin.y+.1,-.15);
 				addColor(layer, color);
 				chart.getScene().getGraph().add(layer);
 			}
 			
+			//Add 3D Memory label on top of stack
 			DrawableTextWrapper txt = new DrawableTextWrapper(o.getSubtype(), new Coord3d(origin.x,dim.y-.2,origin.z), Color.BLACK, r);
 			chart.getScene().getGraph().add(txt);
 			return;
@@ -133,10 +138,8 @@ public class HwlocDrawChart {
 		//Save original x coordinate for grid layout
 		double originx = origin.x;
 		
-		
-		
 		//Grid layout
-		//Will have 3 columns, row count will depend on xml
+		//3 columns, variable row count depending on the xml
 		if(num_children>3) {
 			int rows = (int) Math.ceil(num_children/3.0);
 			
@@ -144,15 +147,9 @@ public class HwlocDrawChart {
 			double height = (double) (((dim.y-origin.y)-((rows+1)*pad))/rows);
 			double width = (double) (((dim.x-origin.x)-4*pad)/3);
 			
-			//z offset
-			//z is currently constant for all
-			//origin.z should match dim.z
-			//z if offset to spawn higher, but when spawning it is a constant because draw takes height
+			//z offset is currently constant (0.15) for all
 			origin=origin.add(new Coord3d(pad, pad, origin.z));
 			dim = new Coord3d(origin.x+width,origin.y+height,origin.z);
-			
-			//System.out.println("dim is "+dim);
-			//System.out.println("alternative dim: "+ new Coord3d(dim.x-pad, dim.y-pad, 0));
 			
 			for (int u = 0; u < num_children; u++) {
 				recursiveChiplet(children.get(u), origin, dim, chart, r, pad);
@@ -164,103 +161,115 @@ public class HwlocDrawChart {
 					origin = new Coord3d(originx+pad, origin.y+height+pad,origin.z);
 					dim = new Coord3d(originx+pad+width, dim.y+height+pad,origin.z);
 				}
-				}
+			}
 			
 		} else {
 			//split into multiple rows in one 1 column
 			double height = (double) ((dim.y-origin.y)-((num_children+1)*pad));
 			double width = (double) ((dim.x-origin.x)-pad);
 			
-			//z offset upwards, draws downwards
+			//Add z offset upwards to match constant in spawn
 			origin = origin.add(new Coord3d(pad,pad,dim.z));
-			//****************dim calculation is different???
+			
+			//Dim calculation and loop needs more testing
+			//Currently only works with Custom.xml
 			dim = new Coord3d(dim.x-pad,height+pad, origin.z);
 			
-			//****************not tested with multiple children in parent
 			for (int a = 0; a < num_children; a++) {
 				recursiveChiplet(children.get(a),  origin,  dim, chart, r, pad);
 				origin = origin.add(new Coord3d(0,width+pad,0));
 				dim = dim.add(new Coord3d(0,width+pad,0));
-				}
+			}
 			
 		}
 			
 			
-		}
-		
+	}
+	
+	/**
+	 * Recursive function for drawing the bridge architecture of a topology. 
+	 * Size of bridge components is set manually.
+	 * Depth is set to 0.15.
+	 * @param o Parent bridge object to rescurse
+	 * @param origin Start point where bridge components start drawing
+	 * @param chart Chart the bridge shapes are added to
+	 * @param r ITextRenderer for rendering text labels
+	 */
 	public static void recursiveBridgeDraw(Object o, Coord3d origin, Chart chart, ITextRenderer r) {
+		
+		//Save original x for resetting during branching
 		double x = (double) origin.x;
 		double y = (double) origin.y;
 		
-		Color color = Color.WHITE;
-		//if bridge, draw square and line right
+		//If bridge, draw square and line right
 		if (o.getType().equals("Bridge")) {
-			spawn(origin.add(new Coord3d(-.3,-.2,.1)), origin.add(new Coord3d(.1,.2,.1)), color, chart, r, null);
+			//Cubes are 0.4x0.4, raised by 0.1
+			spawn(origin.add(new Coord3d(-.3,-.2,.1)), origin.add(new Coord3d(.1,.2,.1)), Color.WHITE, chart, r, null);
+			//Move over start point
 			origin = origin.add(new Coord3d(.1,0,0));
+			//Horizontal lines are set to a constant of 1 
 			drawLine(origin, origin.add(new Coord3d(1,0,0)), chart);
+			//Move origin to end of line to mark the start point of next bridge or PCI
 			origin = origin.add(new Coord3d(1,0,0));
 		
-			//loop over children
+			//Loop over children
 			List<Object> children = o.getObject();	
 			
 			for (int a = 0; a < children.size(); a++) {
 				recursiveBridgeDraw(children.get(a),  origin, chart, r);
-				//branch if multiple children and not last child
+				
+				//Branch if the bridge has multiple children and there's at least one more PCI or bridge child left to draw
+				//Branches after drawing a PCI at the end of the tree to draw the next one
 				if (children.size() > 1 && a != children.size()-1) {
 					
-					//must be in scope of bridge parent
-					//how may pci were in prev child, parent of a bridge can only be a bridge
-					//System.out.println(o.getType());
-					
-					//System.out.println(countPCI(children.get(a)));
-					
 					int depth = count(children.get(a), "PCIDev");
-					//count nested pcis per child with helper function
+					//Count nested PCIs in current child to calculate branch offset for the next child
 					
+					//Call parent x to reset x
 					drawLine(new Coord3d(x, origin.y, 0), new Coord3d(x,y-1.2*depth,0), chart);
-					//x will be const for each corner
-					//y stacks
+					//y stacks so the line goes deeper
+					//Vertical lines down are set to a constant of 1.2
 					y = y-1.2*depth;
 				
-					
+					//Horizontal lines are set to a constant of 1 
 					drawLine(new Coord3d(x, y, 0), new Coord3d(x+1,y,0), chart);
-					//line down and right based on height after each child until last child
-					//reset origin
+					//Move origin to end of line to mark the start point of next bridge or PCI
 					origin = new Coord3d(x+1,y,0);
 				}
 			}
 		
 		}
-		//if pci, check for child, add if exists, get pci type, name
+		//If PCI, draw and add OSDev children
+		//Currently can only draw up to 1 OSDev
+		//OSDev and PCI sizes are manually set constants
 		else if (o.getType().equals("PCIDev")) {
-			color = new Color(219,223,190);
-			spawn(origin.add(new Coord3d(0,-.5,0)), origin.add(new Coord3d(1, .5, 0)), color, chart, r, "PCIDev");
+			spawn(origin.add(new Coord3d(0,-.5,0)), origin.add(new Coord3d(1, .5, 0)), new Color(219,223,190), chart, r, "PCIDev");
 		
 			if (o.getObject().size() > 0) {
-				//System.out.println(o.getObject().get(0).getName());
-				spawn(origin.add(new Coord3d(.1,-.2,.1)), origin.add(new Coord3d(.9, .2, .1)), Color.GRAY, chart, r, o.getObject().get(0).getName());
+				spawn(origin.add(new Coord3d(.1,-.2,.15)), origin.add(new Coord3d(.9, .2, .15)), Color.GRAY, chart, r, o.getObject().get(0).getName());
 			}
 		}
 				
 	}
 
+	//Recursively counts how many components are nested under object
+	//Object cannot be the desired component
 	public static int count(Object o, String component) {
-		
 		int count = 0;
-		//System.out.println(o.getName());
-		List<Object> children = o.getObject();	
 		
-		//should not check child inside loop, check the object
 		if (o.getType().equals(component)) {
 			return 1;
 		} 
 		
+		List<Object> children = o.getObject();	
+
 		for (int a = 0; a < children.size(); a++) {
-			count += count(children.get(a), "PCIDev");
+			count += count(children.get(a), component);
 		}
 		return count;
 	}
 
+	//Draws a line between the given coordinates
 	public static void drawLine(Coord3d origin, Coord3d coord3d, Chart chart) {
 		List<Polygon> polygons = new ArrayList<Polygon>();
 		
@@ -272,7 +281,6 @@ public class HwlocDrawChart {
 	    
 	    Shape tempShape = new Shape(polygons);
 	    
-	    tempShape.setFaceDisplayed(true);
 	    tempShape.setWireframeDisplayed(true);
 	    tempShape.setWireframeColor(Color.BLACK);
 	    tempShape.setWireframeWidth(2);
@@ -301,7 +309,7 @@ public class HwlocDrawChart {
 		
 		//If topology contains a bridge child, deincrement num_children so no space is allocated for it
 		//Bridge is drawn with a separate helper function
-		//ASSUMES BRIDGE IS THE LAST CHILD IN THE LIST
+		//Bridge must be last child in parent object's list of children
 		for (int y = 0; y < num_children; y++) {
 			if (children.get(y).getType().equals("Bridge")) {
 				num_children--;
@@ -313,6 +321,7 @@ public class HwlocDrawChart {
 			}
 		}
 		
+		///////////////////////////////
 		//Add top padding for text
 		dim = new Coord3d(dim.x, dim.y-.15, dim.z);
 		
@@ -333,8 +342,6 @@ public class HwlocDrawChart {
 			double width = (double) (dim.x*.95/num_children);
 			
 			//double width = (double) ((dim.x-origin.x)-pad);
-			
-			
 			
 			//only origin z gets incremented
 			origin = origin.add(new Coord3d(pad, 0.15,0.15));
@@ -369,19 +376,42 @@ public class HwlocDrawChart {
 					}
 				}
 				
-			//partition horizontally
+			//partition horizontally into multiple rows with one column
+				//0.15 z offset
 		} else {
 			
-			//double height = (double) (((dim.y-origin.y)-((num_children+1)*pad))/num_children);
+			//if (o.getSubtype().equals("3D Memory")) {return;}
 			
+//			double pad1 = .15;
+//			
+//			System.out.println(o.getSubtype());
+//			double h = dim.y-origin.y;
+//			System.out.println("h= "+ dim.y+" - " + origin.y+" = "+h);
+//			double totalpad = (num_children+1)*pad1;
+//			System.out.println("total pad: "+ totalpad);
+//			double rh = h-totalpad;
+//			System.out.println("remaining height: "+ rh);
+//			System.out.println("divided hieght: "+ rh/num_children);
+//			System.out.println("num childs = "+num_children);
+//			System.out.println();
+			
+			
+//			double height = (double) (((dim.y-origin.y)-((num_children+1)*pad))/num_children);
+//			origin = origin.add(new Coord3d(pad,pad,0.15));
+//			dim = new Coord3d(dim.x-pad,dim.y-pad, 0);
+//			
+//			System.out.println("height: "+height);
+			
+			
+			
+				//Assumes NumaNode and OSDev aren't in lists larger than 3 items
+				//Gives NumaNode and OSDev fixed heights as they have no children
+			
+			//orig
 			double pad = (double) (dim.y*.05)/(num_children+1);
-			
 			double height = (double) (dim.y*.95/num_children);
-			
-			
 			origin = origin.add(new Coord3d(0.15,pad,0.15));
-			
-				dim = new Coord3d(dim.x-.1,height, 0);
+			dim = new Coord3d(dim.x-.1,height, 0);
 				
 				for (int a = 0; a < num_children; a++) {
 					recursiveDraw(children.get(a),  origin,  dim, chart, r);
@@ -434,7 +464,7 @@ public class HwlocDrawChart {
 	
 	/**
 	 * Draws the component, adds color, and adds to chart with helper functions addColor and draw. 
-	 * Currently the height passed to draw is fixed to -0.15 to match the offset in recursiveDraw.
+	 * Currently the height passed to draw is fixed to -0.15 to match the offset in the recursive functions.
 	 * Text is drawn with a slight offset. 
 	 * 
 	 * @param spawn Coord3d where the Shape starts drawing
@@ -449,7 +479,7 @@ public class HwlocDrawChart {
 		addColor(shape, color);
 		chart.getScene().getGraph().add(shape);
 	    
-	    if (s != null) {
+	    if (s != null && !s.equals("3D Memory")) {
 			DrawableTextWrapper txt = new DrawableTextWrapper(s, new Coord3d(spawn.x,spawn2.y-.2,spawn.z), Color.BLACK, r);
 			chart.getScene().getGraph().add(txt);
 		}

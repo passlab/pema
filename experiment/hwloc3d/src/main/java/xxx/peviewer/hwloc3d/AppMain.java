@@ -21,6 +21,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.jzy3d.chart.Chart;
 
+import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
 /**
  */
 public class AppMain {
@@ -62,12 +63,20 @@ public class AppMain {
 		openItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
 				JFileChooser chooser = new JFileChooser();
+				
+				//Open to hwloc3d directory to easily access sample xmls
+				chooser.setCurrentDirectory(new File  
+						(System.getProperty("user.home") + System.getProperty("file.separator")+ 
+								"peviewer" + System.getProperty("file.separator")+ "experiment"
+								+ System.getProperty("file.separator")+ "hwloc3d"));
+				
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("*.xml", "xml");
 				chooser.setFileFilter(filter);
 				int returnVal = chooser.showOpenDialog(null);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					hwloc2XMLFile = chooser.getSelectedFile();
-					LoadHwloc2XMLFile.loadHwloc2XMLFile(hwloc2XMLFile);
+					Topology topTop = LoadHwloc2XMLFile.loadHwloc2XMLFile(hwloc2XMLFile);
+					
 					try {
 						FileReader reader = new FileReader(hwloc2XMLFile);
 						BufferedReader br = new BufferedReader(reader);
@@ -77,7 +86,10 @@ public class AppMain {
 						panel.add(new JScrollPane(textArea));
 						textArea.requestFocus();
 						mainFrame.setVisible(true);
-						chart = HwlocDrawChart.drawChart();
+						
+						//Call drawChart function from HwlocDrawChart class and pass topology as argument
+						chart = HwlocDrawChart.drawChart(topTop);
+						
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

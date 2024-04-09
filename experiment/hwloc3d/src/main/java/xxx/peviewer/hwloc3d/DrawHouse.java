@@ -1,4 +1,4 @@
-package peviewer.hwloc3d;
+package xxx.peviewer.hwloc3d;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,37 +8,30 @@ import org.jzy3d.analysis.AnalysisLauncher;
 import org.jzy3d.chart.factories.AWTChartFactory;
 import org.jzy3d.chart.factories.IChartFactory;
 import org.jzy3d.colors.Color;
-import org.jzy3d.colors.ColorMapper;
-import org.jzy3d.colors.colormaps.ColorMapRainbow;
 import org.jzy3d.maths.Coord3d;
-import org.jzy3d.maths.Range;
-import org.jzy3d.plot3d.builder.Func3D;
 import org.jzy3d.plot3d.primitives.Point;
 import org.jzy3d.plot3d.primitives.Polygon;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
-import org.jzy3d.plot3d.transform.Rotate;
-import org.jzy3d.plot3d.transform.Rotator;
 import org.jzy3d.plot3d.transform.Transform;
 import org.jzy3d.plot3d.transform.Translate;
-
+import org.jzy3d.plot3d.transform.Rotate;
+import org.jzy3d.plot3d.transform.Rotator;
 import com.jogamp.opengl.awt.GLCanvas;
 
 /**
- * Demo an AWT chart using JOGL {@link GLCanvas}.
+ * Draw a primitive house {@link GLCanvas}.
  * 
  * @author Lillian
  */
 
-//after updating from git, just move to the xxx.peviewer because main class is here?
-
-public class SurfaceDemoAWT2 extends AWTAbstractAnalysis {
+public class DrawHouse extends AWTAbstractAnalysis {
   public static void main(String[] args) throws Exception {
-    SurfaceDemoAWT2 d = new SurfaceDemoAWT2();
+    DrawHouse d = new DrawHouse();
     AnalysisLauncher.open(d);
   }
 
-  //Helper method goes under class and main!
+  //Helper method
   //4 points are added to each polygon
   //each polygon gets added to a list of polygons that forms a surface/shape
   public static void addFace(List<Polygon> faceslist, Coord3d c1, Coord3d c2,Coord3d c3, Coord3d c4)
@@ -53,8 +46,6 @@ public class SurfaceDemoAWT2 extends AWTAbstractAnalysis {
     
   }
   
-  
-//Helper method goes under class and main!
   public static void addFace3(List<Polygon> faceslist, Coord3d c1, Coord3d c2,Coord3d c3)
   {
     Polygon polygon = new Polygon();
@@ -65,7 +56,6 @@ public class SurfaceDemoAWT2 extends AWTAbstractAnalysis {
     faceslist.add(polygon);
     
   }
-  
   
   public static void pushFace(List<Polygon> faceslist, Coord3d c1, Coord3d c2,Coord3d c3, Coord3d c4, Coord3d c5)
   {
@@ -79,28 +69,11 @@ public class SurfaceDemoAWT2 extends AWTAbstractAnalysis {
     
   }
   
-  
   @Override
   public void init() {
-    // Create the object to represent the function over the given range.
-    
-    /*
-
-    // Define a function to plot
-    Func3D func = new Func3D((x, y) -> x * Math.cos(x * y));
-    Range range = new Range(-7, 7);
-    int steps = 40;
-    
-    final Shape surface =
-        new SurfaceBuilder().orthonormal(new OrthonormalGrid(range, steps), func);
-    
-    //surface.setColorMapper(new ColorMapper(new ColorMapRainbow(), surface, new Color(1, 1, 1, .5f)));
-    
-    */
-    
-    
    //ctrl + shift + o for auto importing
-   List<Polygon> polygons = new ArrayList<Polygon>();
+   
+	List<Polygon> polygons = new ArrayList<Polygon>();
     //cube
     double w = 3;
     Coord3d origin = new Coord3d(0,0,0);
@@ -108,7 +81,7 @@ public class SurfaceDemoAWT2 extends AWTAbstractAnalysis {
     Coord3d originX = new Coord3d(w,0,0);
     Coord3d originZ = new Coord3d(0,0,w);
     
-    //Order points are added in matters!
+    //Order points are added in matters
     addFace(polygons, origin, originY, originX.add(originY), originX);
     addFace(polygons, origin.add(originZ), origin, originY, originY.add(originZ));
     addFace(polygons, origin, originX, originX.add(originZ), origin.add(originZ));
@@ -137,41 +110,38 @@ public class SurfaceDemoAWT2 extends AWTAbstractAnalysis {
     
     Shape surface2 = new Shape(pyramid);
     
-  //pasted from https://doc.jzy3d.org/guide/docs/chapter3.html
+    //pasted from https://doc.jzy3d.org/guide/docs/chapter3.html
     //default instantiates everything to 0
     //creates flat plane grid of squares
     
-    /*
-    double [][] mesh = new double[4][4];
-    for(int i = 0; i < mesh.length -1; i++){
-      for(int j = 0; j < mesh[i].length -1; j++){
-        Polygon polygon = new Polygon();
-        polygon.add(new Point(new Coord3d(i, j, mesh[i][j]) ));
-        
-        polygon.add(new Point(new Coord3d(i, j+1, mesh[i][j+1]) ));
-        polygon.add(new Point(new Coord3d(i+1, j+1, mesh[i+1][j+1]) ));
-        polygon.add(new Point(new Coord3d(i+1, j, mesh[i+1][j]) ));
-        polygon.setColor(Color.GREEN);
-        
-        polygons.add(polygon);
-      }
-    }
-    */
-    
+//    
+//    double [][] mesh = new double[4][4];
+//    for(int i = 0; i < mesh.length -1; i++){
+//      for(int j = 0; j < mesh[i].length -1; j++){
+//        Polygon polygon = new Polygon();
+//        polygon.add(new Point(new Coord3d(i, j, mesh[i][j]) ));
+//        
+//        polygon.add(new Point(new Coord3d(i, j+1, mesh[i][j+1]) ));
+//        polygon.add(new Point(new Coord3d(i+1, j+1, mesh[i+1][j+1]) ));
+//        polygon.add(new Point(new Coord3d(i+1, j, mesh[i+1][j]) ));
+//        polygon.setColor(Color.GREEN);
+//        
+//        polygons.add(polygon);
+//      }
+//    }
+//    
 
- // Define rotation around Z axis
+    // Define rotation around Z axis
     //coord defines rotation axis
     
-    	//Cube Rotation
+    //Cube Rotation
+//    Rotate r = new Rotate(25, new Coord3d(1, 1, 1));
+//    Transform t = new Transform();
+//    t.add(r);
+//    Rotator rotator = new Rotator(30, r);
+//    rotator.start();
+//    surface.setTransformBefore(t);
     
-    /*
-    Rotate r = new Rotate(25, new Coord3d(1, 1, 1));
-    Transform t = new Transform();
-    t.add(r);
-    Rotator rotator = new Rotator(30, r);
-    rotator.start();
-    surface.setTransformBefore(t);
-    */
 
     /*
     Scale s = new Scale(new Coord3d(2, 1, 0));
@@ -179,7 +149,6 @@ public class SurfaceDemoAWT2 extends AWTAbstractAnalysis {
   */  
     
     //Pyramid transform and rotation
-    
     Transform tr= new Transform();
     tr.add(new Translate(new Coord3d(0,0,3)));
     surface2.setTransformBefore(tr);
@@ -194,10 +163,7 @@ public class SurfaceDemoAWT2 extends AWTAbstractAnalysis {
     rotatorx.start();
     */
     
-    // Let the wheel rotate
-    //first argument affects speed, larger = slower
     
-    //self-explanatory
     surface.setFaceDisplayed(true);
     surface.setColor(Color.YELLOW);
     surface.setWireframeDisplayed(true);
@@ -210,24 +176,12 @@ public class SurfaceDemoAWT2 extends AWTAbstractAnalysis {
     surface2.setColor(Color.ORANGE);
     surface2.setWireframeColor(Color.BLACK);
     
-    // Create an AWT chart
-    //GLCapabilities c = new GLCapabilities(GLProfile.get(GLProfile.GL3));
-    //IPainterFactory p = new AWTPainterFactory(c);
-    
     IChartFactory f = new AWTChartFactory();
     chart = f.newChart(Quality.Fastest().setHiDPIEnabled(true));
     
     //adds surface to scene
-    //nothing will appear without it!
     chart.getScene().getGraph().add(surface);
-    //weird resizing happens if surfaces intersect
-    //because of the scale of the graph
-    //that's why turning on rotation or wireframe will sometimes put it back to normal
-    
     chart.getScene().getGraph().add(surface2);
-    
-    
-    
-    
+     
   }
 }
