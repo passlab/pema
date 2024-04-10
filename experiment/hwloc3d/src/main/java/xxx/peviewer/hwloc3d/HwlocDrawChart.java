@@ -21,13 +21,14 @@ import xxx.peviewer.hwloc3d.xjcgenerated.Info;
 import xxx.peviewer.hwloc3d.xjcgenerated.Object;
 import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
 
-import xxx.peviewer.hwloc3d.xjcgenerated.Topology;
-
+/**
+ * Draws out an hwloc XML given an unmarshalled Topology.
+ * If you get an 'Unable to determine GraphicsConfiguration' error on Windows, see this fix: https://github.com/jzy3d/jogl/issues/4
+ */
 public class HwlocDrawChart {
 
 	static Chart drawChart(Topology t) {
 		
-
 		IChartFactory f = new AWTChartFactory();
 		
 		Chart chart = f.newChart(Quality.Fastest().setHiDPIEnabled(true));
@@ -39,27 +40,39 @@ public class HwlocDrawChart {
 		ITextRenderer r = new JOGLTextRenderer3d();
 		
 		List<Object> tt = t.getObject();
+		Coord3d size;
 		
-		//Only tested with start as (0,0,0)
-		//Uncomment to visualize Custom.xml
-		
-//		double l = 4;
-//		double w = 5;
-//		//must be .15 to match with spawn
-//		double h = .15;
-//		 for (int o = 0; o<tt.size();o++) { recursiveChiplet(tt.get(o), new
-//		 Coord3d(0,0,0), new Coord3d(l,w,h), chart, r, .2); }
+		////////////////////////////////////////////////////////
+		//Test recursiveChiplet with Custom.xml
+
+//		size = new Coord3d(4,5,.15);
+//		
+//		for (int o = 0; o < tt.size(); o++) {
+//			recursiveChiplet(tt.get(o), new Coord3d(0,0,0), size, chart, r, .2); 
+//		}
 
 		
-		//Uncomment to visualize Haswell xml
+		////////////////////////////////////////////////////////
+		//Test recursiveDraw
+		 
+		//Size is buggy
+		//When length is greater than width or vice versa, the for loop messes up
+		//Maybe all components will be a set size in the future
 		
-		double l = 7;
-		double w = 7;
-		double h = .15;
-		for (int o = 0; o < tt.size();o++) {
-	    	recursiveDraw(tt.get(o), new Coord3d(0,0,0), new Coord3d(l,w,h), chart, r);
+		//optimal size for Haswell
+		//size = new Coord3d(6,4.5,.15);
+		
+		//optimal size for Arm A1
+		//size = new Coord3d(7,8,.15);
+		
+		//optimal size for CascadeLake
+		size = new Coord3d(8,16,.15);
+		
+		
+		for (int o = 0; o < tt.size();o++) {	
+	    	recursiveDraw(tt.get(o), new Coord3d(0,0,0), size, chart, r);
 	    }
-	    
+		
 		ChartLauncher.openChart(chart, "HWLOC3D Chart");
 		return chart;
 	}
@@ -128,7 +141,7 @@ public class HwlocDrawChart {
 				origin = origin.add(new Coord3d(0,0,.15));
 				//add top padding
 				Shape layer = draw(origin.x,origin.y,origin.z,dim.x-origin.x,dim.y-origin.y+.1,-.15);
-				addColor(layer, color);
+				layer.setColor(color);
 				chart.getScene().getGraph().add(layer);
 			}
 			
@@ -295,7 +308,7 @@ public class HwlocDrawChart {
 	public static void recursiveDraw(Object o, Coord3d origin, Coord3d dim, Chart chart, ITextRenderer r) {
 		//Label CPU Model
 		if (o.getType().equals("Machine")) {
-			DrawableTextWrapper txt = new DrawableTextWrapper(findcpumodel(o), new Coord3d(origin.x, .5+dim.y, .15), Color.BLACK, r);
+			DrawableTextWrapper txt = new DrawableTextWrapper(findcpumodel(o), new Coord3d(origin.x, .2+dim.y, 0), Color.BLACK, r);
 			chart.getScene().getGraph().add(txt);
 		}
 		
@@ -311,120 +324,151 @@ public class HwlocDrawChart {
 		List<Object> children = o.getObject();	
 		int num_children = children.size();
 		
-		//If topology contains a bridge child, deincrement num_children so no space is allocated for it
-		//Bridge is drawn with a separate helper function
-		//Bridge must be last child in parent object's list of children
-		for (int y = 0; y < num_children; y++) {
-			if (children.get(y).getType().equals("Bridge")) {
-				num_children--;
-				//Draw bridge parts to the right
-					recursiveBridgeDraw(children.get(y), dim.add(new Coord3d(.3, 0, 0)), chart, r);
-				//Draw bridge parts on bottom
-				//Can cause overlapping issues if bridge is nested
-					//recursiveBridgeDraw(children.get(y), new Coord3d(origin.x, origin.y-.5, origin.z), chart, r);
-			}
+		//Exit early if no children (base case)
+		//The rest of the code will be inapplicable
+		if (num_children == 0) {
+			return;
 		}
 		
-		///////////////////////////////
+		//If topology contains a bridge child, deincrement num_children so no space is allocated for it
+		//Bridge is drawn with a separate helper function
+		int bridgecount =0;
+		for (int y = 0; y < num_children; y++) {
+			if (children.get(y).getType().equals("Bridge")) {
+				bridgecount++;
+				//Draw bridge parts to the right
+				if (bridgecount == 1) {recursiveBridgeDraw(children.get(y), dim.add(new Coord3d(.5, 0, 0)), chart, r);}
+				//Manually offset to match Cascade Lake
+				else {recursiveBridgeDraw(children.get(y), dim.add(new Coord3d(4, 0, 0)), chart, r);}
+					
+				//Draw bridge parts on bottom
+				//recursiveBridgeDraw(children.get(y), new Coord3d(origin.x, origin.y-.5, origin.z), chart, r);
+			}
+		}
+		num_children -= bridgecount;
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		//Start code for recursive calling and space partitioning
+		
 		//Add top padding for text
 		dim = new Coord3d(dim.x, dim.y-.15, dim.z);
 		
-		//padding segments is 1 + num children
-		//split vertically
-		//used by l2s, groups, and packages
-		//maybe split to grid for other 2
-		if (dim.x>dim.y && num_children >3) {
+		//Split VERTICALLY into COLUMNS
+		//For L2/L3s, maybe groups, and packages
+		//Might try implementing grid layout in the future
+		if ( num_children >3 ) {
 			
-			int L2count = num_children;
-		
-			//fewer l2s
-			if (o.getType().equals("L3Cache") || o.getType().equals("L2Cache")) {
-				num_children =3;
-			}
+			//Special Conditions for L2/L3Caches
+					//Count number of children for text label
+					//Cascade Lake & Haswell counts L2Cache, ARM A1 counts L1
+					int Lcount = count(o,"L2Cache");
+				
+					//Limit number of L2/L3s
+					if (Lcount !=0) {
+						num_children =3;
+					}
 					
-			double pad = (double) (dim.x*.05)/(num_children+1);
-			double width = (double) (dim.x*.95/num_children);
+					int Ncount = count(o,"NUMANode");
+					//Also draw numa, if present, by incrementing children 
+					if (Ncount !=0) {
+						num_children++;
+					}
+					
+			//Calculate width of elements given constant padding
+			double pad = .15;
+			double padtotal = pad*(num_children+1);
+			double remainingwidth = (dim.x-origin.x)-padtotal;
+			double width = remainingwidth/num_children;
 			
-			//double width = (double) ((dim.x-origin.x)-pad);
-			
-			//only origin z gets incremented
-			origin = origin.add(new Coord3d(pad, 0.15,0.15));
-			dim = new Coord3d(width, dim.y-.1, 0);
+			//Increment origin z by a constant 0.15 to match with the 0.15 in spawn
+			origin = origin.add(new Coord3d(pad, pad,0.15));
+			//dim adds width to padded spawn point
+			dim = new Coord3d(origin.x+width, dim.y-pad, 0);
+				int count = 0;
 				
 				for (int m = 0; m < num_children; m++) {
-					//fewer L2s
-					
-					if ( (o.getObject().get(m).getType().equals("L2Cache") || o.getObject().get(m).getType().equals("L1Cache"))&& m ==1) {
-						double boxwidth = (dim.x-origin.x)/7;
-						Coord3d square = new Coord3d(origin.x+boxwidth, dim.y-.3, origin.z);
-						spawn(square, square.add(new Coord3d(boxwidth, boxwidth, 0)), color, chart, r, null);
-						square = square.add(new Coord3d(boxwidth*2, 0,0));
-						spawn(square, square.add(new Coord3d(boxwidth, boxwidth, 0)), color, chart, r, null);
-						square = square.add(new Coord3d(boxwidth*2, 0,0));
-						spawn(square, square.add(new Coord3d(boxwidth, boxwidth, 0)), color, chart, r, null);
-						
-						DrawableTextWrapper txt = new DrawableTextWrapper(L2count + "x total", new Coord3d(origin.x+.5, dim.y-.7, origin.z), Color.BLACK, r);
-						chart.getScene().getGraph().add(txt);
-						
-						//move onto next l2
-						//do not change z
-						origin = origin.add(new Coord3d(width,0,0));
-						dim = dim.add(new Coord3d(width,0,0));
-						
-					}
-					else {
-						
-					recursiveDraw(children.get(m),  origin,  dim, chart, r);
-					origin = origin.add(new Coord3d(width,0,0));
-					dim = dim.add(new Coord3d(width,0,0));
-					}
-				}
+					//After drawing 1st L2/L3, draw squares portion of L2/L3 section in the middle
+					if (count == 1) { L2boxes(dim, origin, chart, r, Lcount); }
+					else { recursiveDraw(children.get(m),  origin,  dim, chart, r); }
 				
-			//partition horizontally into multiple rows with one column
-				//0.15 z offset
+					if (o.getObject().get(m).getType().contains("Cache")) {count++;}
+					
+					//Continue drawing next element
+					origin = origin.add(new Coord3d(width+pad,0,0));
+					dim = dim.add(new Coord3d(width+pad,0,0));
+			}
+				
+		//Split HORIZONTALLY into ROWS
 		} else {
 			
-			//if (o.getSubtype().equals("3D Memory")) {return;}
+			double pad = 0.15;
+			double padtotal = pad*(num_children+1);
+			double remainingheight = (dim.y-origin.y)-padtotal;
+			double height = remainingheight/num_children;
 			
-//			double pad1 = .15;
-//			
-//			System.out.println(o.getSubtype());
-//			double h = dim.y-origin.y;
-//			System.out.println("h= "+ dim.y+" - " + origin.y+" = "+h);
-//			double totalpad = (num_children+1)*pad1;
-//			System.out.println("total pad: "+ totalpad);
-//			double rh = h-totalpad;
-//			System.out.println("remaining height: "+ rh);
-//			System.out.println("divided hieght: "+ rh/num_children);
-//			System.out.println("num childs = "+num_children);
-//			System.out.println();
+			int ind = 0;
+			boolean hasnuma = false;
 			
+			//Give NumaNode and OSDev fixed heights of .3 so they take less space
+			//Assumes NumaNode and OSDev aren't in lists larger than 3 items
+			//Assumes only one NumaNode or OSDev is in each list of children
 			
-//			double height = (double) (((dim.y-origin.y)-((num_children+1)*pad))/num_children);
-//			origin = origin.add(new Coord3d(pad,pad,0.15));
-//			dim = new Coord3d(dim.x-pad,dim.y-pad, 0);
-//			
-//			System.out.println("height: "+height);
+			//If there is a NumaNode or OSDev in child list
+			for (int y = 0; y < num_children; y++) {
+				if (children.get(y).getType().equals("NUMANode") || children.get(y).getType().equals("OSDev")) {
+					//redistribute height
+					height = height+((height-.3)/(num_children-1));
+					ind = y;
+					hasnuma = true;
+				}
+			}
 			
-			
-			
-				//Assumes NumaNode and OSDev aren't in lists larger than 3 items
-				//Gives NumaNode and OSDev fixed heights as they have no children
-			
-			//orig
-			double pad = (double) (dim.y*.05)/(num_children+1);
-			double height = (double) (dim.y*.95/num_children);
-			origin = origin.add(new Coord3d(0.15,pad,0.15));
-			dim = new Coord3d(dim.x-.1,height, 0);
+			//Causes some weird spacing
+			//Increment origin z by a constant 0.15 to match with the 0.15 in spawn
+			origin = origin.add(new Coord3d(pad,pad,0.15));
+			dim = new Coord3d(dim.x-pad,origin.y+height, 0);
 				
 				for (int a = 0; a < num_children; a++) {
-					recursiveDraw(children.get(a),  origin,  dim, chart, r);
-					origin = origin.add(new Coord3d(0,height,0));
-					dim = dim.add(new Coord3d(0,height,0));
+					
+					if (hasnuma && a == ind) {
+						//Set height to 0.3
+						dim = new Coord3d(dim.x,origin.y+.3,0);
+						recursiveDraw(children.get(a),  origin,  dim, chart, r);
+						origin = origin.add(new Coord3d(0,.3+pad,0));
+						//reset dim
+						dim = new Coord3d(dim.x, height+pad, 0);
+						
+					} else {
+						recursiveDraw(children.get(a),  origin,  dim, chart, r);
+						origin = origin.add(new Coord3d(0,height+pad,0));
+						dim = dim.add(new Coord3d(0,height+pad,0));
+						
 					}
+					
+				}
 		}
-		}
+	}
+	
+	
+	//Helper function to draw the middle 3 boxes of L2s/L3s given start and end coordinates
+	public static void L2boxes(Coord3d dim, Coord3d origin, Chart chart, ITextRenderer r, int Lcount) {
 		
+		//The width of the box will match the padding between boxes
+		double boxwidth = (dim.x-origin.x)/7;
+		
+		//Boxes are spaced 0.3 away from top of dim
+		Shape b1 = draw(origin.x+boxwidth,dim.y-.3,origin.z,boxwidth,boxwidth,-.15);
+		Shape b2 = draw(origin.x+boxwidth*3,dim.y-.3,origin.z,boxwidth,boxwidth,-.15);
+		Shape b3 = draw(origin.x+boxwidth*5,dim.y-.3,origin.z,boxwidth,boxwidth,-.15);
+		
+		chart.getScene().getGraph().add(b1);
+		chart.getScene().getGraph().add(b2);
+		chart.getScene().getGraph().add(b3);
+		
+		//Text is roughly centered and offset from top manually
+		DrawableTextWrapper txt = new DrawableTextWrapper(Lcount + "x total", new Coord3d(origin.x+.5, dim.y-.7, origin.z), Color.BLACK, r);
+		chart.getScene().getGraph().add(txt);
+	}
+	
 	/**
 	 * Finds CPU Model of the topology
 	 * @param o Machine object to search CPU Model of
@@ -451,21 +495,7 @@ public class HwlocDrawChart {
 		
 		return name;
 	}
-	
-/**
- 	* Helper method to set color, wireframe, etc.
- * @param shape Shape to color
- * @param color Color shape is set to
- */
-	public static void addColor(Shape shape, Color color)
-		  {
-			shape.setFaceDisplayed(true);
-			shape.setColor(color);
-			shape.setWireframeDisplayed(true);
-			shape.setWireframeColor(Color.BLACK);
-			shape.setWireframeWidth(2);
-		   }
-	
+
 	/**
 	 * Draws the component, adds color, and adds to chart with helper functions addColor and draw. 
 	 * Currently the height passed to draw is fixed to -0.15 to match the offset in the recursive functions.
@@ -480,7 +510,7 @@ public class HwlocDrawChart {
 	 */
 	public static void spawn(Coord3d spawn, Coord3d spawn2, Color color, Chart chart, ITextRenderer r, String s) {
 		Shape shape = draw(spawn.x,spawn.y,spawn.z,spawn2.x-spawn.x,spawn2.y-spawn.y,-.15);
-		addColor(shape, color);
+		shape.setColor(color);
 		chart.getScene().getGraph().add(shape);
 	    
 	    if (s != null && !s.equals("3D Memory")) {
@@ -491,6 +521,7 @@ public class HwlocDrawChart {
 	
 	/**
 	 * Draws a box from a given xyz coord with a given length, width, and height.
+	 * 	Turns on a black wireframe with thickness 2, face visibility, and leaves as default white color.
 	 * 	Points composed of Coord3ds make up individual Polygons, which are the sides of the box.
 	 * 	The arraylist of Polygons forms a Shape, which is the box that is returned.
 	 * 	
@@ -562,6 +593,12 @@ public class HwlocDrawChart {
         }
         
         Shape box = new Shape(sides);
+        
+        box.setFaceDisplayed(true);
+		box.setWireframeDisplayed(true);
+		box.setWireframeColor(Color.BLACK);
+		box.setWireframeWidth(2);
+        
         return box;
 
     }
