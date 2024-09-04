@@ -28,7 +28,7 @@ This folder contains instructions and sample files/traces to help one start deve
 
 10. Import the xml file [pinsight-analysis.xml](pinsight-analysis.xml) to setup pinsight data-driven analysis and visualization. The XML file is developed using a [data driven analysis solution in tracecompass](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/Data-driven-analysis.html#Data_driven_analysis).
 
-11. Open [the sample trace package](https://drive.google.com/drive/u/1/folders/1yWLd_ET0AwhKYFDRYfq_b9MAZmUYei_p), unpack it and open it with tracecompass to visualize. You will need to go down to the deep of the folder and open a metadata file. Download this file. Unzip the file and import it to the "traces" folder in eclipse. It should look like this after importing the traces. 
+11. Open a Trace: Download [the sample trace package](https://drive.google.com/drive/u/1/folders/1yWLd_ET0AwhKYFDRYfq_b9MAZmUYei_p), unpack it and browse down to the deep of the folder and open a metadata file. 
 
 <img width="1440" alt="Screenshot 2023-09-08 at 9 38 48 PM" src="https://github.com/passlab/pinsight/assets/135630264/3de002f0-95b7-49ba-941c-0c785ad76242">
 
