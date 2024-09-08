@@ -4,7 +4,7 @@ This folder contains instructions and sample files/traces to help one start deve
 
 ## Set up tracecompass and visualize the sample data using XML data-driven view. 
 
-1. Download and install [tracecompass(https://www.eclipse.org/tracecompass/ ) . 
+1. Download and install [tracecompass(https://www.eclipse.org/tracecompass/ ). Click downloads on the webpage and install based on computer's processor. MacOS that contains M chips install 64-bit ARM, for Intel chips install 64-bit x86. 
 2. Read [tracecompass user guide(https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/User-Guide.html) to get familiar with the UI interface and their functionality
 3. Import the xml file [pinsight-analysis.xml](pinsight-analysis.xml) to setup pinsight data-driven analysis and visualization. The XML file is developed using a [data driven analysis solution in tracecompass](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/Data-driven-analysis.html#Data_driven_analysis). 
 4. Open [the sample trace package](https://drive.google.com/drive/u/1/folders/1yWLd_ET0AwhKYFDRYfq_b9MAZmUYei_p), unpack it if you need to and open it with tracecompass to visualize. You will need to go down to the deep of the folder and open a metadata file.
@@ -50,7 +50,7 @@ This folder contains instructions and sample files/traces to help one start deve
 
 
 ### Create a plugin in Eclipse 
-1. Check [the Tracecompass tutorial for creating a plugin](https://archive.eclipse.org/tracecompass/doc/org.eclipse.tracecompass.doc.dev/View-Tutorial.html#View_Tutorial). The tutorial is part of [the Tracecompass developer guide](https://archive.eclipse.org/tracecompass/doc/org.eclipse.tracecompass.doc.dev/Developer-Guide.html) that also includes other features for analysis and visualization 
+1. Check [the Tracecompass tutorial for creating a plugin](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.dev/View-Tutorial.html#Creating_an_Eclipse_UI_Plug-in). The tutorial is part of [the Tracecompass developer guide](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.dev/Developer-Guide.html) that also includes other features for analysis and visualization 
 2. With the tutorial, have the example working to the step of creating an empty view, but not using the data provided by the example traces in the tutorial since we will need to populate the view using the provided sample trace files. The code used in the the tutorial example are outdated and we will update as we progress.
 3. In your plugin view, modify the code to visualize the parallel region of the traces by analyzing the lttng_pinsight:parallel_begin and lttng_pinsight:parallel_end events for the trace you have. You can put in the bar chart for the visualization: X-axis is the parallel_codeptr, y-axis is the accumulated execution time of the parallel region. 
 
