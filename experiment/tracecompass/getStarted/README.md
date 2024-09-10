@@ -20,9 +20,9 @@ This folder contains instructions and sample files/traces to help one start deve
 5. After the installation of tracecompass plugin, Eclipse will restart
 6. After restart, create a new trace project
 7. File>New>Project
-<img width="1470" alt="Screenshot 2023-09-08 at 7 51 41 PM" src="https://github.com/passlab/pinsight/assets/135630264/585e5e14-6314-4676-b736-cc895fd87a61">
+<img width="1470" alt="Screenshot 2023-09-08 at 7 51 41 PM" src="https://github.com/passlab/peviewer/blob/main/experiment/tracecompass/getStarted/images/newproj.png">
 8. Tracing>Tracing project
-  <img width="1470" alt="Screenshot 2023-09-08 at 7 56 58 PM" src="https://github.com/passlab/pinsight/assets/135630264/12dd660d-441b-4a5e-82c8-72e34cc11a6b">
+  <img width="1470" alt="Screenshot 2023-09-08 at 7 56 58 PM" src="https://github.com/passlab/peviewer/blob/main/experiment/tracecompass/getStarted/images/tracingproj.png">
   
 9. Read [tracecompass user guide](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/User-Guide.html) to get familiar with the UI interface and their functionality.
 
@@ -30,13 +30,13 @@ This folder contains instructions and sample files/traces to help one start deve
 
 11. Open a Trace: Download [the sample trace package](https://drive.google.com/drive/u/1/folders/1yWLd_ET0AwhKYFDRYfq_b9MAZmUYei_p), unpack it and browse down to the deep of the folder and open a metadata file. 
 
-<img width="1440" alt="Screenshot 2023-09-08 at 9 38 48 PM" src="https://github.com/passlab/pinsight/assets/135630264/3de002f0-95b7-49ba-941c-0c785ad76242">
+<img width="1440" alt="Screenshot 2023-09-08 at 9 38 48 PM" src="https://github.com/passlab/peviewer/blob/main/experiment/tracecompass/getStarted/images/opentrace.png">
 
 12. Make sure to select the trace type as shown in the picture below.
-    <img width="1440" alt="Screenshot 2023-10-19 at 1 52 02 PM" src="https://github.com/passlab/pinsight/assets/135630264/05b2fcef-c5f9-4e82-9430-9711afe53e99">
+    <img width="1440" alt="Screenshot 2023-10-19 at 1 52 02 PM" src="https://github.com/passlab/peviewer/blob/main/experiment/tracecompass/getStarted/images/tracetype.png">
 
 13. You should see the following after you click the PInsight OpenMP Trace Review button deep in the Traces. You will be able to see the data like this.
-    <img width="1440" alt="Screenshot 2023-09-08 at 9 44 58 PM" src="https://github.com/passlab/pinsight/assets/135630264/c1fbff01-a334-4802-853c-e516afbbce60">
+    <img width="1440" alt="Screenshot 2023-09-08 at 9 44 58 PM" src="https://github.com/passlab/peviewer/blob/main/experiment/tracecompass/getStarted/images/tracevisual.png">
 
 
 
