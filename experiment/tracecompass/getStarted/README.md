@@ -6,7 +6,7 @@ This folder contains instructions and sample files/traces to help one start deve
 
 1. Download and install [tracecompass(https://www.eclipse.org/tracecompass/ ). Click downloads on the webpage and install based on computer's processor. MacOS that contains M chips install 64-bit ARM, for Intel chips install 64-bit x86. 
 2. Read [tracecompass user guide(https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/User-Guide.html) to get familiar with the UI interface and their functionality
-3. Import the xml file [pinsight-analysis.xml](pinsight-analysis.xml) to setup pinsight data-driven analysis and visualization. The XML file is developed using a [data driven analysis solution in tracecompass](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/Data-driven-analysis.html#Data_driven_analysis). 
+3. Import the xml file [pinsight_analysis.xml](pinsight_analysis.xml) to setup pinsight data-driven analysis and visualization. The XML file is developed using a [data driven analysis solution in tracecompass](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/Data-driven-analysis.html#Data_driven_analysis). 
 4. Open [the sample trace package](https://drive.google.com/drive/u/1/folders/1yWLd_ET0AwhKYFDRYfq_b9MAZmUYei_p), unpack it if you need to and open it with tracecompass to visualize. You will need to go down to the deep of the folder and open a metadata file.
 
    
