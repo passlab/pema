@@ -28,7 +28,7 @@ Eclipse Trace Compass can be used to view, analyze and visualize the PInsight tr
 The visualization was created in Trace Compass using [Data driven analysis](
  http://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/Data-driven-analysis.html#Data_driven_analysis). To generate visualizations like this yourself, look at the `tracecompass/` folder in this repository.
 
- ![Lulesh tracing and visualization with Tracecompass](doc/OMPT_LTTng_TraceCompass.png). 
+ ![Lulesh tracing and visualization with Tracecompass](docs/OMPT_LTTng_TraceCompass.png). 
 
 -------------------------------------
 
