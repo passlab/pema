@@ -4,13 +4,13 @@ This folder contains instructions and sample files/traces to help one start deve
 
 ## Set up tracecompass and visualize the sample data using XML data-driven view. 
 
-1. Download and install [tracecompass(https://www.eclipse.org/tracecompass/ ). Click downloads on the webpage and install based on computer's processor. MacOS that contains M chips install 64-bit ARM, for Intel chips install 64-bit x86. 
-2. Read [tracecompass user guide(https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/User-Guide.html) to get familiar with the UI interface and their functionality
-3. Import the xml file [pinsight_analysis.xml](pinsight_analysis.xml) to setup pinsight data-driven analysis and visualization. The XML file is developed using a [data driven analysis solution in tracecompass](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/Data-driven-analysis.html#Data_driven_analysis). 
-4. Open [the sample trace package](https://drive.google.com/drive/u/1/folders/1yWLd_ET0AwhKYFDRYfq_b9MAZmUYei_p), unpack it if you need to and open it with tracecompass to visualize. You will need to go down to the deep of the folder and open a metadata file.
+1. Download and install [tracecompass](https://www.eclipse.org/tracecompass/ ). Click downloads on the webpage and install based on computer's processor. MacOS that contains M chips install 64-bit ARM, for Intel chips install 64-bit x86. 
+2. Read [Tracecompass user guide](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/User-Guide.html) to get familiar with the UI interface and their functionality
+3. Import the xml file [pinsight_analysis.xml](pinsight_analysis.xml) to setup pinsight data-driven analysis and visualization. The XML file is developed using a [data driven analysis solution in tracecompass](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/Data-driven-analysis.html#Data_driven_analysis) that has a screenshot for "Managing XML files containing analyses" for importing the XML file. 
+4. Download the [the LULESH trace files](https://drive.google.com/drive/u/1/folders/1yWLd_ET0AwhKYFDRYfq_b9MAZmUYei_p), unpack it to a folder and open it with Tracecompass. The [Tracecompass user guide](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/Trace-Compass-Main-Features.html#Importing_Traces_to_the_Project) has screenshot how to open it. For the LULESH traces, you will need to go down to the deep of the folder and open the file named "metadata".
 
    
-### for mac:
+### Set up Eclipse IDE with Tracecompass plugin for the plugin development:
 1. Download the [Eclipse IDE](https://www.eclipse.org/downloads/download.php?file=/oomph/epp/2023-06/R/eclipse-inst-jre-mac64.dmg)
 2. Read [Trace compass user guide](https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/User-Guide.html) to get familiar with the UI interface and their functionality
 3. open eclipse installer and open the "Eclipse IDE for RCP and RAP Developers"
