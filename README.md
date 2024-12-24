@@ -1,4 +1,4 @@
-# Performance and Execution Monitoring, Analysis and View
+# Performance and Execution Monitoring and Analysis
 
 ### Python script
 This repo comes with a few Python scripts which can dump program statistics into CSV format for analysis.
