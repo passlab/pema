@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Ui
+Bundle-SymbolicName: org.eclipse.tracecompass.tmf.sample.ui;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.eclipse.tracecompass.tmf.sample.ui.Activator
+Bundle-ClassPath: .
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.tracecompass.tmf.ui;bundle-version="9.0.0",
+ org.eclipse.swtchart;bundle-version="0.14.0",
+ org.eclipse.tracecompass.tmf.core;bundle-version="9.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Automatic-Module-Name: org.eclipse.tracecompass.tmf.sample.ui
+Import-Package: jakarta.inject;version="[2.0.0,3.0.0)"
+Bundle-ActivationPolicy: lazy

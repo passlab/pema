@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Sample Category"
+            id="org.eclipse.tracecompass.tmf.sample.ui">
+      </category>
+      <view
+            id="org.eclipse.tracecompass.tmf.sample.ui.views.SampleView"
+            name="Sample View"
+            icon="icons/sample.png"
+            class="org.eclipse.tracecompass.tmf.sample.ui.views.SampleView"
+            category="org.eclipse.tracecompass.tmf.sample.ui"
+            inject="true">
+      </view>
+      <view
+            class="org.eclipse.tracecompass.tmf.sample.ui.SampleView"
+            id="org.eclipse.tracecompass.tmf.sample.ui.view3"
+            name="Sample View"
+            restorable="true">
+      </view>
+      <view
+            class="org.eclipse.tracecompass.tmf.sample.ui.ViewPart"
+            id="org.eclipse.tracecompass.tmf.sample.ui.view4"
+            name="Pinsight"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <view
+               id="org.eclipse.tracecompass.tmf.sample.ui.views.SampleView"
+               relative="org.eclipse.ui.views.ProblemView"
+               relationship="right"
+               ratio="0.5">
+         </view>
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+      <contexts
+            file="contexts.xml">
+      </contexts>
+   </extension>
+
+
+</plugin>
