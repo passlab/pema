@@ -22,10 +22,11 @@ cd pema
 
 ## Running the Sample View in Eclipse
 1. In the lb analysis project, expand the src folder
-2. Keep opening the folders until you find the SampleView file
+2. Keep opening the folders until you find the SampleView.java file
 3. Right-click on SampleView
 4. Click Run As > Eclipse Application
 5. The view should be visible 
+![Screenshot 2025-02-14 at 10 48 22 AM](https://github.com/user-attachments/assets/1e94f0b5-7504-4219-89d1-86dda51d4b64)
 
 
 Keep in mind that the view will only be visible if the tracing data is running!
