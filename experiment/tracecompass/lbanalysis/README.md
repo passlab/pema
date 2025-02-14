@@ -19,3 +19,6 @@ cd pema
 3. Right-click on SampleView
 4. Click Run As > Eclipse Application
 5. The view should be visible 
+
+
+Keep in mind that the view will only be visible if the tracing data is running!
