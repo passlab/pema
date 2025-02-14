@@ -1,4 +1,9 @@
 # OpenMP Load Balance Analysis using Eclipse Tracecompass
+
+## Set up Tracing Project
+If haven't already done so set up the Tracing Project before moving on.
+Follow these steps until you reach Plug-in Project: https://github.com/passlab/pema/blob/main/experiment/tracecompass/getStarted/README.md
+
 ## Cloning the Repository
 #### Open Terminal and follow these commands:
 
