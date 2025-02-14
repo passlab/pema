@@ -25,7 +25,8 @@ cd pema
 2. Keep opening the folders until you find the SampleView.java file
 3. Right-click on SampleView
 4. Click Run As > Eclipse Application
-5. The view should be visible 
+5. Don't worry if there are errors just click proceed
+6. The view should be visible 
 ![Screenshot 2025-02-14 at 10 48 22 AM](https://github.com/user-attachments/assets/1e94f0b5-7504-4219-89d1-86dda51d4b64)
 
 
