@@ -1,10 +1,10 @@
 # OpenMP Load Balance Analysis using Eclipse Tracecompass
 ## Cloning the Repository
 ### Open Terminal and follow these commands:
-'''
+
 git clone https://github.com/passslab/pema.git
 cd pema
-'''
+
 ## Importing the Project into Eclipse
 1. Open Eclipse
 2. Click File > Open Projects from File system.
