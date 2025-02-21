@@ -43,8 +43,8 @@ import org.eclipse.tracecompass.tmf.ui.viewers.xychart.TmfChartTimeStampFormat;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 import org.eclipse.ui.part.ViewPart;
 
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+//import org.apache.poi.ss.usermodel.*;
+//import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -138,27 +138,27 @@ public class SampleView extends TmfView {
                 if (eventName.equals("ompt_pinsight_lttng_ust:implicit_task_begin") && field != null) {
                     
 
-                	Double threadNum = extractThreadNumber(field);
+                	int threadNum = extractThreadNumber(field);
                 	String parrallelCodePtr = extractParrallelCodePtr(field); 
 
-                    if (threadNum != null && threadNum < MAX_THREADS && parrallelCodePtr!=null) {
+                    if (threadNum != -1 && threadNum < MAX_THREADS && parrallelCodePtr!=null) {
                         double xValue = (double) data.getTimestamp().getValue();
-                        startTimes[threadNum.intValue()] = xValue; 
+                        startTimes[threadNum] = xValue; 
                  
                     }
                 	       	
 
 
                 } else if (eventName.equals("ompt_pinsight_lttng_ust:implicit_task_end") && field != null) {
-                    Double threadNum = extractThreadNumber(field);
+                    int threadNum = extractThreadNumber(field);
                 	String parrallelCodePtr = extractParrallelCodePtr(field); 
-                    if (threadNum != null && threadNum < MAX_THREADS && parrallelCodePtr != null) {
+                    if (threadNum != -1 && threadNum < MAX_THREADS && parrallelCodePtr != null) {
                         double xValue = (double) data.getTimestamp().getValue();
-                        endTimes[threadNum.intValue()] = xValue; 
+                        endTimes[threadNum] = xValue; 
 
 
                         // Calculate execution time for the thread
-                        double executionTime = endTimes[threadNum.intValue()] - startTimes[threadNum.intValue()];
+                        double executionTime = endTimes[threadNum] - startTimes[threadNum];
                         
                         
                        /** if(threadsTime.containsKey(threadNum.intValue())){
@@ -169,7 +169,7 @@ public class SampleView extends TmfView {
                         	threadsTime.put(threadNum.intValue(), executionTime);
                         }*/
                         threadExecutionTimes
-                        .computeIfAbsent(threadNum.intValue(), k -> new HashMap<>())
+                        .computeIfAbsent(threadNum, k -> new HashMap<>())
                         .put(parrallelCodePtr, executionTime);
                         
                         
@@ -302,16 +302,16 @@ public class SampleView extends TmfView {
                 });
             }
 
-           private Double extractThreadNumber(ITmfEventField field) {
+           private int extractThreadNumber(ITmfEventField field) {
                 String fieldString = field.toString();
                 String[] contentSplit = fieldString.split("\\s*,\\s*");
                 for (String content : contentSplit) {
                     if (content.contains("omp_thread_num")) {
                     	String[] Numsplit = content.split("\\s*=\\s*");
-                    	return Double.parseDouble(Numsplit[1]);
+                    	return Integer.parseInt(Numsplit[1]);
                     }
                 }
-                return null;
+                return -1;
             }
             
             private String extractParrallelCodePtr(ITmfEventField field) {
