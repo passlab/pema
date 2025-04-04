@@ -1181,6 +1181,7 @@
 		<!--  for right after the PInsight is constructed (lib loaded), which is mostly sequential computation, thus green color -->
 		<definedValue name="PINSIGHT_STATE_STARTED" value="10100" color="#2E8B57"/> <!-- seagreen -->
 		<definedValue name="PINSIGHT_STATE_TERMINATED" value="10101" color="#FFFFFF" /> <!-- white --> <!--  not traced after this -->
+		<definedValue name="OMP_STATE_TRANSITION" value="110209" color="#FFFFFF" /> <!-- white --> <!--  not traced after this -->
 		
 		<definedValue name="LTTNG_UST_STATEDUMP_STARTED" value="10000" color="#20b2aa" /> <!-- light seagreen -->
 		<definedValue name="LTTNG_UST_STATEDUMP_LIB_LOADED" value="10001" color="#696969" /> <!-- less saturated seagreen -->
