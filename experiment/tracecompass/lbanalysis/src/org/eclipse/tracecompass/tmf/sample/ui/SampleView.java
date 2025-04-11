@@ -1,11 +1,5 @@
 
-
-
-
-
 package org.eclipse.tracecompass.tmf.sample.ui;
-
-
 
 import java.awt.Color;
 import java.text.FieldPosition;
@@ -25,6 +19,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swtchart.Chart;
 import org.eclipse.swtchart.IBarSeries;
+import org.eclipse.swtchart.ISeries;
 import org.eclipse.swtchart.ISeries.SeriesType;
 import org.eclipse.swtchart.Range;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
@@ -43,356 +38,354 @@ import org.eclipse.tracecompass.tmf.ui.viewers.xychart.TmfChartTimeStampFormat;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 import org.eclipse.ui.part.ViewPart;
 
-//import org.apache.poi.ss.usermodel.*;
-//import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 
-
-
 public class SampleView extends TmfView {
 
-    private static final String SERIES_NAME = "Series";
-    private static final String Y_AXIS_TITLE = "Total Execution Time";
-    private static final String X_AXIS_TITLE = "Thread Number";
-    private static final String FIELD = "value"; // The name of the field that we want to display on the Y axis
-    private static final String VIEW_ID = "org.eclipse.tracecompass.tmf.sample.ui.view";
-    private Chart chart;
-    private ITmfTrace currentTrace;
-    double minY=Double.MAX_VALUE, maxY=Double.MIN_VALUE;
+	private static final String SERIES_NAME = "Series";
+	private static final String Y_AXIS_TITLE = "Total Execution Time";
+	private static final String X_AXIS_TITLE = "Thread Number";
+	private static final String FIELD = "value"; // The name of the field that we want to display on the Y axis
+	private static final String VIEW_ID = "org.eclipse.tracecompass.tmf.sample.ui.view";
+	private Chart chart;
+	private ITmfTrace currentTrace;
+	double minY = Double.MAX_VALUE, maxY = Double.MIN_VALUE;
 
+	private static final int MAX_THREADS = 20;
 
-    private static final int MAX_THREADS = 20;
+	private double[] startTimes = new double[MAX_THREADS];
+	private double[] endTimes = new double[MAX_THREADS];
 
+	// a new map to record each thread separately
+	private Map<Long, Integer>[] threadParallelRegionCounts;
 
-    private double[] startTimes = new double[MAX_THREADS];
-    private double[] endTimes = new double[MAX_THREADS];
+	private Map<Long, Double>[] threadExecutionTimes;
 
-    public SampleView() {
-        super(VIEW_ID);
-    }
-    
+	public SampleView() {
+		super(VIEW_ID);
 
+		threadParallelRegionCounts = new HashMap[MAX_THREADS];
+		threadExecutionTimes = new HashMap[MAX_THREADS];
 
-    @Override
-    public void createPartControl(Composite parent) {
-        chart = new Chart(parent, SWT.BORDER);
-        chart.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_WHITE));
-        chart.getTitle().setVisible(false);
-        chart.getAxisSet().getXAxis(0).getTitle().setText(X_AXIS_TITLE);
-        chart.getAxisSet().getXAxis(0).getTitle().setForeground(Display.getDefault().getSystemColor(SWT.COLOR_CYAN));
-        chart.getAxisSet().getYAxis(0).getTitle().setText(Y_AXIS_TITLE);
-        chart.getAxisSet().getYAxis(0).getTitle().setForeground(Display.getDefault().getSystemColor(SWT.COLOR_CYAN));
-        chart.getSeriesSet().createSeries(SeriesType.BAR, SERIES_NAME);
-        chart.getLegend().setVisible(false);
+		for (int i = 0; i < MAX_THREADS; i++) {
+			threadParallelRegionCounts[i] = new HashMap<>();
+			threadExecutionTimes[i] = new HashMap<>();
+		}
 
-        chart.getAxisSet().getYAxis(0).getTick().setFormat(new TmfChartTimeStampFormat());
-        chart.getAxisSet().getYAxis(0).getTick().setForeground(Display.getDefault().getSystemColor(SWT.COLOR_CYAN));
-        chart.getAxisSet().getXAxis(0).getTick().setForeground(Display.getDefault().getSystemColor(SWT.COLOR_CYAN)); 
+	}
 
-    }
+	@Override
+	public void createPartControl(Composite parent) {
+		chart = new Chart(parent, SWT.BORDER);
+		chart.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_WHITE));
+		chart.getTitle().setVisible(false);
+		chart.getAxisSet().getXAxis(0).getTitle().setText(X_AXIS_TITLE);
+		chart.getAxisSet().getXAxis(0).getTitle().setForeground(Display.getDefault().getSystemColor(SWT.COLOR_CYAN));
+		chart.getAxisSet().getYAxis(0).getTitle().setText(Y_AXIS_TITLE);
+		chart.getAxisSet().getYAxis(0).getTitle().setForeground(Display.getDefault().getSystemColor(SWT.COLOR_CYAN));
+		chart.getSeriesSet().createSeries(SeriesType.BAR, SERIES_NAME);
+		chart.getLegend().setVisible(false);
 
-    public class TmfChartTimeStampFormat extends SimpleDateFormat {
-        private static final long serialVersionUID = 1L;
+		chart.getAxisSet().getYAxis(0).getTick().setFormat(new TmfChartTimeStampFormat());
+		chart.getAxisSet().getYAxis(0).getTick().setForeground(Display.getDefault().getSystemColor(SWT.COLOR_CYAN));
+		chart.getAxisSet().getXAxis(0).getTick().setForeground(Display.getDefault().getSystemColor(SWT.COLOR_CYAN));
 
-        @Override
-        public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
-            long time = date.getTime();
-            toAppendTo.append(TmfTimestampFormat.getDefaulTimeFormat().format(time));
-            return toAppendTo;
-        }
-    }
+		chart.getAxisSet().getXAxis(0).getTitle().setText("Thread Number");
+		chart.getAxisSet().getYAxis(0).getTitle().setText("Execution Time");
 
-    @TmfSignalHandler
-    public void traceSelected(final TmfTraceSelectedSignal signal) {
-        if (currentTrace == signal.getTrace()) {
-            return;
-        }
-        currentTrace = signal.getTrace();
+		chart.getLegend().setVisible(false);
+		chart.getAxisSet().adjustRange();
 
-        // Create the request to get data from the trace
-        TmfEventRequest req = new TmfEventRequest(TmfEvent.class, TmfTimeRange.ETERNITY, 0, ITmfEventRequest.ALL_DATA,
-                ITmfEventRequest.ExecutionType.BACKGROUND) {
+	}
 
-            ArrayList<Double> xValues = new ArrayList<>();
-            ArrayList<Double> yValues = new ArrayList<>();
-            //ArrayList<Double> xValuesE = new ArrayList<>();
-            //ArrayList<Double> yValuesE = new ArrayList<>();
-           Map<Integer, Double> threadsTime = new TreeMap<Integer, Double>();
-           Map<Integer, Map<String, Double>> threadExecutionTimes = new HashMap<Integer, Map<String, Double>>();
+	public class TmfChartTimeStampFormat extends SimpleDateFormat {
+		private static final long serialVersionUID = 1L;
 
-            
+		@Override
+		public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
+			long time = date.getTime();
+			toAppendTo.append(TmfTimestampFormat.getDefaulTimeFormat().format(time));
+			return toAppendTo;
+		}
+	}
 
-            @Override
-            public void handleData(ITmfEvent data) {
-            
-                super.handleData(data);
-                ITmfEventField field = data.getContent().getField();
-                String eventName = data.getName();
-                
+	@TmfSignalHandler
+	public void traceSelected(final TmfTraceSelectedSignal signal) {
+		if (currentTrace == signal.getTrace()) {
+			return;
+		}
+		currentTrace = signal.getTrace();
 
+		// Create the request to get data from the trace
+		TmfEventRequest req = new TmfEventRequest(TmfEvent.class, TmfTimeRange.ETERNITY, 0, ITmfEventRequest.ALL_DATA,
+				ITmfEventRequest.ExecutionType.BACKGROUND) {
 
-                if (eventName.equals("ompt_pinsight_lttng_ust:implicit_task_begin") && field != null) {
-                    
+			ArrayList<Double> xValues = new ArrayList<>();
+			ArrayList<Double> yValues = new ArrayList<>();
 
-                	int threadNum = extractThreadNumber(field);
-                	String parrallelCodePtr = extractParrallelCodePtr(field); 
+			Map<Integer, Double> threadsTime = new TreeMap<Integer, Double>();
 
-                    if (threadNum != -1 && threadNum < MAX_THREADS && parrallelCodePtr!=null) {
-                        double xValue = (double) data.getTimestamp().getValue();
-                        startTimes[threadNum] = xValue; 
-                 
-                    }
-                	       	
+			@Override
+			public void handleData(ITmfEvent data) {
 
+				super.handleData(data);
+				ITmfEventField field = data.getContent().getField();
+				String eventName = data.getName();
 
-                } else if (eventName.equals("ompt_pinsight_lttng_ust:implicit_task_end") && field != null) {
-                    int threadNum = extractThreadNumber(field);
-                	String parrallelCodePtr = extractParrallelCodePtr(field); 
-                    if (threadNum != -1 && threadNum < MAX_THREADS && parrallelCodePtr != null) {
-                        double xValue = (double) data.getTimestamp().getValue();
-                        endTimes[threadNum] = xValue; 
+				if (field == null)
+					return;
 
+				int threadNum = extractThreadNumber(field);
+				long parallelCodePtr = extractParallelCodePtr(field);
 
-                        // Calculate execution time for the thread
-                        double executionTime = endTimes[threadNum] - startTimes[threadNum];
-                        
-                        
-                       /** if(threadsTime.containsKey(threadNum.intValue())){
-                        	double existingValue = threadsTime.get(threadNum.intValue());
-                        	threadsTime.put(threadNum.intValue(), executionTime+existingValue);
-                        
-                        }else {
-                        	threadsTime.put(threadNum.intValue(), executionTime);
-                        }*/
-                        threadExecutionTimes
-                        .computeIfAbsent(threadNum, k -> new HashMap<>())
-                        .put(parrallelCodePtr, executionTime);
-                        
-                        
+				if (threadNum == -1 || threadNum >= MAX_THREADS || parallelCodePtr == -1) {
+					return;
+				}
 
-                    }
-                }
-                
-                
-               
-             }
-            
+				if (eventName.equals("ompt_pinsight_lttng_ust:implicit_task_begin")) {
 
-            @Override
-            public void handleSuccess() {
-            	
-            	System.out.println("threadExecutionTimes !!!"+threadExecutionTimes);
-            	
-            	for(int i=0; i<threadExecutionTimes.keySet().toArray().length;i++) {
-            		Integer value = (Integer)threadExecutionTimes.keySet().toArray()[i];
-            		xValues.add(value.doubleValue());
+					startTimes[threadNum] = (double) data.getTimestamp().getValue();
 
-            	}
-            	
-               /**	for(int i=0; i<threadExecutionTimes.values().size();i++) {
-               		Map<String, double> values = 
-               		double value = (double)threadsTime.values().toArray()[i];
-            		yValues.add(value);
-            		minY = Math.min(minY, value);
-            		maxY = Math.max(maxY, value);
-            		
-            	}*/
-            	
-               	int threadCount = threadExecutionTimes.keySet().size();
-                double[] x = new double[threadCount];  // X values (Thread Numbers)
-                Map<String, double[]> ySeriesMap = new HashMap<>();  // Y values per parrallel_codeptr
+					threadParallelRegionCounts[threadNum].put(parallelCodePtr,
+							threadParallelRegionCounts[threadNum].getOrDefault(parallelCodePtr, 0) + 1);
 
-                for (int i = 0; i < threadCount; i++) {
-                    Integer threadNum = threadExecutionTimes.keySet().toArray(new Integer[0])[i];
-                    x[i] = threadNum.doubleValue();
+				} else if (eventName.equals("ompt_pinsight_lttng_ust:implicit_task_end")) {
 
-                    // Get execution times for each parrallel_codeptr in this thread
-                    Map<String, Double> phases = threadExecutionTimes.get(threadNum);
-                    for (Map.Entry<String, Double> entry : phases.entrySet()) {
-                        String parrallelCodePtr = entry.getKey();
-                        double executionTime = entry.getValue();
+					endTimes[threadNum] = (double) data.getTimestamp().getValue();
 
-                        // Add execution time for this parrallel_codeptr
-                        ySeriesMap.computeIfAbsent(parrallelCodePtr, k -> new double[threadCount])[i] = executionTime;
-                    }
-                }
-                
-                String[] xCategories = new String[x.length];
-                for(int i=0; i<x.length;i++) {
-                	xCategories[i] = ""+x[i];
-            	System.out.println("testing   "+x[i]);
-                }
-                
-               	
-           
+					// Calculate execution time for the thread
+					double executionTime = endTimes[threadNum] - startTimes[threadNum];
 
-            	
-                super.handleSuccess();
-                
-                
+					threadExecutionTimes[threadNum].put(parallelCodePtr, executionTime);
 
+				}
 
-                
-                //final double xE[] = toArray(xValuesE);
-                //final double yE[] = toArray(yValuesE);
+			}
 
-                // This part needs to run on the UI thread since it updates the chart SWT control
-                Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void handleSuccess() {
+				super.handleSuccess();
 
-                    @Override
-                    public void run() {
-                    	
-                        chart.getSeriesSet().getSeries()[0].setXSeries(x);
-                       // chart.getSeriesSet().getSeries()[0].setYSeries(y);
-                        //chart.getAxisSet().getXAxis(0).setRange(new Range(1, x[x.length - 1]));
-                        
-                        chart.getAxisSet().getXAxis(0).setRange(new Range(-1, 20));
-                        //chart.getAxisSet().getYAxis(0).setRange(new Range(minY, maxY));  
-                        chart.getAxisSet().getXAxis(0).enableCategory(true);
-                        chart.getAxisSet().getXAxis(0).setCategorySeries(xCategories);
-                        chart.getSeriesSet().getSeries()[0].enableStack(false);
-                        
-                        IBarSeries series[] = new IBarSeries[ySeriesMap.entrySet().size()];
-                        int colorIndex = 0;
-                        
-                        for (Map.Entry<String, double[]> entry : ySeriesMap.entrySet()) {
-                            String parrallelCodePtr = entry.getKey();
-                            double[] yValues = entry.getValue();
+				List<String> xCategoryList = new ArrayList<>();
+				Map<Long, double[]> ySeriesMap = new HashMap<>();
 
-                            series[colorIndex] = (IBarSeries) chart.getSeriesSet().createSeries(
-                                SeriesType.BAR, "Series "+colorIndex);
-                            series[colorIndex].setYSeries(yValues);
-                            series[colorIndex].setBarColor(Display.getDefault().getSystemColor(SWT.COLOR_GREEN + colorIndex));  // Assign different colors
-                            series[colorIndex].enableStack(true);
+				int threadCount = threadExecutionTimes.length;
+				double[] x = new double[threadCount];
 
-                            colorIndex++;
-                        }
+				for (int i = 0; i < threadCount; i++) {
+					x[i] = i;
+					xCategoryList.add("Thread " + i);
 
-                        //chart.getPlotArea().addMouseMoveListener(null);
+					Map<Long, Double> phases = threadExecutionTimes[i];
+					for (Map.Entry<Long, Double> entry : phases.entrySet()) {
+						long ptr = entry.getKey();
+						double execTime = entry.getValue();
+						ySeriesMap.computeIfAbsent(ptr, k -> new double[threadCount])[i] = execTime;
+					}
+				}
 
-                        // create bar series
-                        /**    IBarSeries series1 = (IBarSeries) chart.getSeriesSet().createSeries(
-                              SeriesType.BAR, "series 1");
-                          series1.setYSeries(y);
-                        
-                        IBarSeries series2 = (IBarSeries) chart.getSeriesSet().createSeries(
-                                     SeriesType.BAR, "series 2");
-                           series2.setYSeries(z);
-                          series2.setBarColor(Display.getDefault()
-                                       .getSystemColor(SWT.COLOR_CYAN));
-                        
-                        //chart.getSeriesSet().getSeries()[1].setYSeries(z);
-                        //chart.getAxisSet().getXAxis(0).setRange(new Range(1, x[x.length - 1]));
-                        chart.getAxisSet().getXAxis(1).setRange(new Range(-1, 20));
-                        chart.getAxisSet().getYAxis(1).setRange(new Range(minY, maxY)); 
-                        
-                        chart.getSeriesSet().getSeries()[1].enableStack(true);
-                         */
-                        
-                        //series1.enableStack(true);
-                        //series2.enableStack(true);
-                        chart.getAxisSet().adjustRange();
-                        chart.redraw();
-                        exportToExcel(threadExecutionTimes);
-                    }
-                });
-            }
+				System.out.println("Parallel Region Execution Counts Per Thread:");
 
-           private int extractThreadNumber(ITmfEventField field) {
-                String fieldString = field.toString();
-                String[] contentSplit = fieldString.split("\\s*,\\s*");
-                for (String content : contentSplit) {
-                    if (content.contains("omp_thread_num")) {
-                    	String[] Numsplit = content.split("\\s*=\\s*");
-                    	return Integer.parseInt(Numsplit[1]);
-                    }
-                }
-                return -1;
-            }
-            
-            private String extractParrallelCodePtr(ITmfEventField field) {
-                String fieldString = field.toString();
-                String[] contentSplit = fieldString.split("\\s*,\\s*");
-                for (String content : contentSplit) {
-                    if (content.contains("parallel_codeptr")) {
-                        String[] split = content.split("\\s*=\\s*");
-                        return split[1]; 
-                    }
-                }
-                return null;
-            }
+				for (int threadNum = 0; threadNum < MAX_THREADS; threadNum++) {
+					if (!threadParallelRegionCounts[threadNum].isEmpty()) {
+						System.out.println("Thread " + threadNum + ":");
+						for (Map.Entry<Long, Integer> entry : threadParallelRegionCounts[threadNum].entrySet()) {
+							System.out.println(" Parallel Region 0x" + Long.toHexString(entry.getKey()) + " executed "
+									+ entry.getValue() + " times");
+						}
+					}
+				}
 
-            private double[] toArray(List<Double> list) {
-                double[] d = new double[list.size()];
-                for (int i = 0; i < list.size(); ++i) {
-                    d[i] = list.get(i);
-                }
-                return d;
-            }
-        };
+				String[] xCategories = xCategoryList.toArray(new String[0]);
 
-        ITmfTrace trace = signal.getTrace();
-        trace.sendRequest(req);
-    }
-    
-    
+				Display.getDefault().asyncExec(() -> {
+					// Remove all existing series first
+					Arrays.stream(chart.getSeriesSet().getSeries())
+							.forEach(s -> chart.getSeriesSet().deleteSeries(s.getId()));
 
-    @Override
-    public void setFocus() {
-        chart.setFocus();
-    }
-    
-  private void exportToExcel(Map<Integer, Map<String, Double>> threadExecutionTime) {
-      String csvFile = "/Users/bhavanachappidi/Downloads/example.csv";
-      BufferedWriter writer = null;
-	  try {
-          writer = new BufferedWriter(new FileWriter(csvFile));
-          String excelHeader = "Thread#,Parralel Region,Execution Time";
-          writer.write(excelHeader);	
-          writer.newLine();
+					// Setup x-axis categories before assigning series
+					chart.getAxisSet().getXAxis(0).enableCategory(true);
+					chart.getAxisSet().getXAxis(0).setCategorySeries(xCategories);
+					chart.getAxisSet().getXAxis(0).setRange(new Range(-1, threadCount));
 
-          
-         	int threadCount = threadExecutionTime.keySet().size();
-            double[] x = new double[threadCount];  // X values (Thread Numbers)
-            for (int i = 0; i < threadCount; i++) {
-                Integer threadNum = threadExecutionTime.keySet().toArray(new Integer[0])[i];
-                x[i] = threadNum.doubleValue();
+					// Add new series (stacked per parallel region)
+					int colorIndex = 0;
+					for (Map.Entry<Long, double[]> entry : ySeriesMap.entrySet()) {
+						IBarSeries barSeries = (IBarSeries) chart.getSeriesSet().createSeries(SeriesType.BAR,
+								"Region 0x" + Long.toHexString(entry.getKey()));
+						barSeries.setXSeries(x);
+						barSeries.setYSeries(entry.getValue());
+						barSeries
+								.setBarColor(Display.getDefault().getSystemColor((SWT.COLOR_GREEN + (colorIndex % 8))));
+						barSeries.enableStack(true);
+						colorIndex++;
+					}
 
-                // Get execution times for each parrallel_codeptr in this thread
-                Map<String, Double> phases = threadExecutionTime.get(threadNum);
-                String excelRow = null;
-                for (Map.Entry<String, Double> entry : phases.entrySet()) {
-                	excelRow = new String();
- 
-                    String parrallelCodePtr = entry.getKey();
-                    double executionTime = entry.getValue();
-                    excelRow = threadNum.toString()+","+parrallelCodePtr+","+executionTime;
-                    writer.write(excelRow);	
-                    writer.newLine();
+					chart.getAxisSet().adjustRange();
+					chart.redraw();
 
-                }
-                    
-            }
-          
+					exportToExcel(threadExecutionTimes);
+					
+					
+					// swtchart built in zooming
+					chart.addListener(SWT.MouseWheel, event -> {
+					    if (event.count > 0) {
+					        chart.getAxisSet().zoomIn();
+					    } else {
+					        chart.getAxisSet().zoomOut();
+					    }
+					});
+					
+					
+					chart.getPlotArea().addMouseMoveListener(e -> {
+						double mouseX = chart.getAxisSet().getXAxis(0).getDataCoordinate(e.x);
+						double mouseY = chart.getAxisSet().getYAxis(0).getDataCoordinate(e.y);
 
+						int closestThread = (int) Math.round(mouseX);
+						if (closestThread < 0 || closestThread >= MAX_THREADS) {
+							chart.getPlotArea().setToolTipText(null);
+							return;
+						}
 
-          System.out.println("CSV file created successfully!");
-      } catch (IOException e) {
-          e.printStackTrace();
-      } finally {
-          try {
-              if (writer != null) {
-                  writer.close();
-              }
-          } catch (IOException e) {
-              e.printStackTrace();
-          }
-      }
-  }
-   
+						double cumulativeHeight = 0.0;
+
+						ISeries[] allSeries = chart.getSeriesSet().getSeries();
+
+						for (int i = allSeries.length - 1; i >= 0; i--) {
+							if (allSeries[i] instanceof IBarSeries) {
+								IBarSeries barSeries = (IBarSeries) allSeries[i];
+								double[] ySeries = barSeries.getYSeries();
+
+								if (closestThread < ySeries.length) {
+									double barHeight = ySeries[closestThread];
+									double topBoundary = cumulativeHeight + barHeight;
+									double bottomBoundary = cumulativeHeight;
+
+									if (mouseY >= bottomBoundary && mouseY <= topBoundary) {
+										chart.getPlotArea()
+												.setToolTipText("Thread " + closestThread + "\nParallel Region: "
+														+ barSeries.getId() + "\nExecution Time: " + barHeight + " ms");
+										return;
+									}
+									cumulativeHeight = topBoundary;
+								}
+							}
+						}
+
+						chart.getPlotArea().setToolTipText(null);
+					});
+				});
+			}
+
+			private int findClosestIndex(double mouseX, double[] xValues) {
+				int closestIndex = -1;
+				double minDiff = Double.MAX_VALUE;
+
+				for (int i = 0; i < xValues.length; i++) {
+					double diff = Math.abs(mouseX - xValues[i]);
+					if (diff < minDiff) {
+						minDiff = diff;
+						closestIndex = i;
+					}
+				}
+				return closestIndex;
+			}
+
+			private int extractThreadNumber(ITmfEventField field) {
+				String fieldString = field.toString();
+				String[] contentSplit = fieldString.split("\\s*,\\s*");
+				for (String content : contentSplit) {
+					if (content.contains("omp_thread_num")) {
+						String[] Numsplit = content.split("\\s*=\\s*");
+						return Integer.parseInt(Numsplit[1]);
+					}
+				}
+				return -1;
+			}
+
+			private long extractParallelCodePtr(ITmfEventField field) {
+				String fieldString = field.toString();
+				String[] contentSplit = fieldString.split("\\s*,\\s*");
+				for (String content : contentSplit) {
+					if (content.contains("parallel_codeptr")) {
+						String[] split = content.split("\\s*=\\s*");
+						try {
+							return Long.parseUnsignedLong(split[1].replace("0x", ""), 16);
+						} catch (NumberFormatException e) {
+							System.err.println("Invalid parallel_codeptr value: " + split[1]);
+							return -1;
+						}
+					}
+				}
+				return -1;
+			}
+
+			private double[] toArray(List<Double> list) {
+				double[] d = new double[list.size()];
+				for (int i = 0; i < list.size(); ++i) {
+					d[i] = list.get(i);
+				}
+				return d;
+			}
+		};
+
+		ITmfTrace trace = signal.getTrace();
+		trace.sendRequest(req);
+	}
+
+	@Override
+	public void setFocus() {
+		chart.setFocus();
+	}
+
+	private void exportToExcel(Map<Long, Double>[] threadExecutionTimes) {
+		String csvFile = "/Users/bhavanachappidi/Downloads/example.csv";
+		BufferedWriter writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(csvFile));
+			String excelHeader = "Thread#,Parallel Region,Execution Time";
+			writer.write(excelHeader);
+			writer.newLine();
+
+			int threadCount = threadExecutionTimes.length;
+			double[] x = new double[threadCount]; // X values (Thread Numbers)
+
+			// initially i < threadCount, now MAX_THREADS
+			for (int i = 0; i < threadCount; i++) {
+
+				x[i] = i;
+
+				// Get execution times for each parallel_codeptr in this thread
+				Map<Long, Double> phases = threadExecutionTimes[i];
+				String excelRow = null;
+				for (Map.Entry<Long, Double> entry : phases.entrySet()) {
+					excelRow = new String();
+
+					Long parallelCodePtr = entry.getKey();
+					double executionTime = entry.getValue();
+					excelRow = i + "," + parallelCodePtr + "," + executionTime;
+					writer.write(excelRow);
+					writer.newLine();
+
+				}
+
+			}
+
+			System.out.println("CSV file created successfully!");
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (writer != null) {
+					writer.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 }
